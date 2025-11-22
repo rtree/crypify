@@ -67,6 +67,7 @@ SA_EMAIL=$(gcloud iam service-accounts list \
 
 echo $SA_EMAIL
 # 出力例: github-actions@crypify-prod.iam.gserviceaccount.com
+# deployment-buenos-2025@ethglobal-479011.iam.gserviceaccount.com
 ```
 
 ---
@@ -75,22 +76,22 @@ echo $SA_EMAIL
 
 ```bash
 # Cloud Run管理者権限
-gcloud projects add-iam-policy-binding <YOUR_PROJECT_ID> \
+gcloud projects add-iam-policy-binding ethglobal-479011 \
   --member="serviceAccount:$SA_EMAIL" \
   --role="roles/run.admin"
 
 # Storage管理者権限（Container Registry用）
-gcloud projects add-iam-policy-binding <YOUR_PROJECT_ID> \
+gcloud projects add-iam-policy-binding ethglobal-479011 \
   --member="serviceAccount:$SA_EMAIL" \
   --role="roles/storage.admin"
 
 # Secret Managerアクセス権限
-gcloud projects add-iam-policy-binding <YOUR_PROJECT_ID> \
+gcloud projects add-iam-policy-binding ethglobal-479011 \
   --member="serviceAccount:$SA_EMAIL" \
   --role="roles/secretmanager.secretAccessor"
 
 # サービスアカウントユーザー権限（Cloud Runデプロイ時に必要）
-gcloud projects add-iam-policy-binding <YOUR_PROJECT_ID> \
+gcloud projects add-iam-policy-binding ethglobal-479011 \
   --member="serviceAccount:$SA_EMAIL" \
   --role="roles/iam.serviceAccountUser"
 ```
