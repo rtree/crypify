@@ -30,3 +30,87 @@ model Session {
   collaborator  Boolean?  @default(false)
   emailVerified Boolean?  @default(false)
 }
+
+model PaymentSession {
+  id                    String          @id @default(cuid())
+  sessionId             String          @unique
+  gid                   String
+  amount                Float
+  currency              String
+  test                  Boolean         @default(false)
+  kind                  String?
+  customerEmail         String?
+  customerLocale        String?
+  proposedAt            String?
+  cancelUrl             String?
+  status                String          @default("pending")
+  paymentMethod         String?
+  rawData               String
+  
+  // CDP transaction data
+  walletAddress         String?
+  transactionHash       String?
+  blockNumber           String?
+  
+  // Confirmation data
+  confirmationResult    Boolean?
+  confirmationReceivedAt DateTime?
+  
+  // Timestamps
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  
+  // Relations
+  refundSessions        RefundSession[]
+  captureSessions       CaptureSession[]
+  voidSessions          VoidSession[]
+}
+
+model RefundSession {
+  id                String         @id @default(cuid())
+  sessionId         String         @unique
+  gid               String
+  paymentSessionId  String
+  amount            Float
+  currency          String
+  proposedAt        String?
+  status            String         @default("pending")
+  rawData           String
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  paymentSession    PaymentSession @relation(fields: [paymentSessionId], references: [sessionId])
+}
+
+model CaptureSession {
+  id                String         @id @default(cuid())
+  sessionId         String         @unique
+  gid               String
+  paymentSessionId  String
+  amount            Float
+  currency          String
+  proposedAt        String?
+  status            String         @default("pending")
+  rawData           String
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  paymentSession    PaymentSession @relation(fields: [paymentSessionId], references: [sessionId])
+}
+
+model VoidSession {
+  id                String         @id @default(cuid())
+  sessionId         String         @unique
+  gid               String
+  paymentSessionId  String
+  proposedAt        String?
+  status            String         @default("pending")
+  rawData           String
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  paymentSession    PaymentSession @relation(fields: [paymentSessionId], references: [sessionId])
+}
