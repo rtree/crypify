@@ -134,18 +134,21 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 
 ---
 
-## 📋 実装ステップ (002-IMPLEMENTATION_GUIDE.md準拠)
+## 📋 実装ステップ
 
-### Phase 1: プロジェクト初期化
-1. Shopify App作成 (`pnpm create @shopify/app@latest`)
-2. 開発環境セットアップ（環境変数、Supabase接続）
-3. Payment Extension生成 (`shopify app generate extension`)
+### Phase 1: プロジェクト初期化 ✅
+1. ✅ Shopify App作成 (`pnpm create @shopify/app@latest`)
+2. ✅ 開発環境セットアップ（環境変数、Supabase接続）
+3. ✅ Payment Extension手動作成（CLIでは生成不可のため）
 
-### Phase 2: Backend API実装
-4. Payment Session Handler (`/api/payment_session`)
-5. Payment Resolve API (`/api/payment/resolve`)
-6. Refund Session Handler (`/api/refund_session`)
-7. Confirm Session Handler (`/api/confirm_session`) - オプション
+### Phase 2: Backend API実装 ✅
+4. ✅ Payment Session Handler (`/api/payment_session`)
+5. ⏳ Payment Resolve API (`/api/payment/resolve`) - 次のステップ
+6. ✅ Refund Session Handler (`/api/refund_session`)
+7. ✅ Confirmation Callback Handler (`/api/confirmation_callback`)
+8. ✅ Capture Session Handler (`/api/capture_session`) - オプション
+9. ✅ Void Session Handler (`/api/void_session`) - オプション
+10. ✅ Prisma Schema拡張（PaymentSession, RefundSession, CaptureSession, VoidSession）
 
 ### Phase 3: Frontend実装
 8. Checkout UI Extension（ロゴ・説明文のみ）
@@ -171,7 +174,16 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 
 ## 🔑 重要な設計判断
 
-### 1. なぜ Payment Extension (Alternative Payment) か？
+### 1. Payment Extension の実装方法について ⚠️
+
+**重要な発見**: Shopify CLIの `shopify app generate extension` コマンドでは**Payment Extensionを自動生成できません**。
+
+- ❌ CLI template一覧にPayments Extensionが存在しない
+- ✅ 手動で `extensions/crypify-payment/` ディレクトリを作成
+- ✅ `shopify.extension.toml` を手動で記述
+- ✅ ソースコード調査により `payments.custom-onsite.render` ターゲットを確認
+
+### 2. なぜ Payment Extension (Alternative Payment) か？
 
 **比較: Theme App Extension (従来型) vs Payment Extension**
 
@@ -185,7 +197,7 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 
 **結論**: Payment Extensionがハッカソン + 本番運用の両面で最適
 
-### 2. なぜ リダイレクト方式 か？
+### 3. なぜ リダイレクト方式 か？
 
 **制約**: Checkout UI ExtensionはWeb Worker環境
 
@@ -203,7 +215,7 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
   ✅ 同一ドメイン内でUX維持
 ```
 
-### 3. なぜ Base Chain か？
+### 4. なぜ Base Chain か？
 
 | 項目 | Ethereum Mainnet | Base (Coinbase L2) |
 |------|------------------|-------------------|
@@ -214,7 +226,7 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 
 **結論**: マイクロペイメント対応 + UX最適化のためBase一択
 
-### 4. なぜ Supabase Transaction Mode か？
+### 5. なぜ Supabase Transaction Mode か？
 
 **Cloud Run (Serverless) の特性**:
 - 同時接続数が変動

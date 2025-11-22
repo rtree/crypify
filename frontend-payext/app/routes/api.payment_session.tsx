@@ -14,7 +14,7 @@
  * - payment_method: payment method details
  */
 
-import { json, type ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
@@ -75,7 +75,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     console.log("[Payment Session] Redirecting to:", redirectUrl);
 
     // Return redirect URL to Shopify (required for successful payment session creation)
-    return json(
+    return Response.json(
       {
         redirect_url: redirectUrl,
       },
@@ -90,7 +90,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     console.error("[Payment Session] Error:", error);
     
     // Return error status code (not 2xx) to indicate failure
-    return json(
+    return Response.json(
       {
         error: "Failed to create payment session",
         message: error instanceof Error ? error.message : String(error),

@@ -27,11 +27,21 @@
 │   │   └── shopify.server.ts          # Shopify API クライアント
 │   │
 │   ├── extensions/                     # Shopify Extensions
-│   │   └── .gitkeep                    # (これから Extension を生成)
+│   │   ├── crypify-checkout-ui/        # Checkout UI Extension ✅
+│   │   │   ├── src/
+│   │   │   │   └── Checkout.jsx
+│   │   │   ├── locales/
+│   │   │   │   ├── en.default.json
+│   │   │   │   └── fr.json
+│   │   │   └── shopify.extension.toml
+│   │   └── crypify-payment/            # Payment Extension ✅ (手動作成)
+│   │       └── shopify.extension.toml
 │   │
 │   ├── prisma/                         # データベーススキーマ
 │   │   ├── migrations/                 # マイグレーションファイル
-│   │   └── schema.prisma              # Prismaスキーマ定義
+│   │   │   ├── 20240530213853_create_session_table/
+│   │   │   └── 20251122031613_add_payment_models/ ✅
+│   │   └── schema.prisma              # Prismaスキーマ定義 ✅
 │   │
 │   ├── public/                         # 静的ファイル
 │   │   └── favicon.ico
@@ -117,29 +127,33 @@ pnpm shopify app dev
 
 ---
 
-## 🚀 次に生成するExtensions
+## ✅ 生成済みExtensions
 
-### 1. Payment Extension
+### 1. Payment Extension (手動作成) ✅
+
+**重要**: CLIでは生成不可のため手動作成
+
 ```bash
 cd /home/araki/crypify/frontend-payext
-pnpm shopify app generate extension
-
-# 選択肢:
-# Type: Payments App Extension > Custom Onsite (Alternative)
-# Name: crypify-payment
+mkdir -p extensions/crypify-payment
+vim extensions/crypify-payment/shopify.extension.toml
 ```
 
-**生成後の構成**:
+**実際の構成**:
 ```
 frontend-payext/
 ├── extensions/
 │   └── crypify-payment/
-│       ├── src/
-│       │   └── index.ts
-│       └── shopify.extension.toml
+│       └── shopify.extension.toml  # 手動作成 ✅
 ```
 
-### 2. Checkout UI Extension
+**設定内容**:
+- `type: payments_extension`
+- `target: payments.custom-onsite.render`
+- `payment_session_url`, `refund_session_url` など5つのエンドポイント定義
+- `ui_extension_handle: crypify-checkout-ui` でCheckout UIと連携
+
+### 2. Checkout UI Extension ✅
 ```bash
 cd /home/araki/crypify/frontend-payext
 pnpm shopify app generate extension
@@ -149,15 +163,18 @@ pnpm shopify app generate extension
 # Name: crypify-checkout-ui
 ```
 
-**生成後の構成**:
+**生成された構成**:
 ```
 frontend-payext/
 ├── extensions/
 │   ├── crypify-payment/
-│   └── crypify-checkout-ui/
+│   └── crypify-checkout-ui/  ✅
 │       ├── src/
-│       │   └── index.tsx
-│       └── shopify.ui.extension.toml
+│       │   └── Checkout.jsx
+│       ├── locales/
+│       │   ├── en.default.json
+│       │   └── fr.json
+│       └── shopify.extension.toml
 ```
 
 ---
@@ -168,13 +185,13 @@ frontend-payext/
 
 ```
 app/routes/
-├── api.payment_session.tsx        # POST /api/payment_session
-├── api.refund_session.tsx         # POST /api/refund_session
-├── api.capture_session.tsx        # POST /api/capture_session
-├── api.void_session.tsx           # POST /api/void_session
-├── api.confirm_session.tsx        # POST /api/confirm_session
-├── api.payment.resolve.tsx        # POST /api/payment/resolve
-└── app.pay.$id.tsx                # GET /app/pay/:id (決済ページ)
+├── api.payment_session.tsx        # POST /api/payment_session ✅
+├── api.refund_session.tsx         # POST /api/refund_session ✅
+├── api.capture_session.tsx        # POST /api/capture_session ✅
+├── api.void_session.tsx           # POST /api/void_session ✅
+├── api.confirmation_callback.tsx  # POST /api/confirmation_callback ✅
+├── api.payment.resolve.tsx        # POST /api/payment/resolve ⏳
+└── app.pay.$id.tsx                # GET /app/pay/:id (決済ページ) ⏳
 ```
 
 ---

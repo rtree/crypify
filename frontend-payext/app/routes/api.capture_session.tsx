@@ -13,7 +13,7 @@
  * - proposed_at: timestamp
  */
 
-import { json, type ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
@@ -55,7 +55,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     console.log("[Capture Session] Created successfully");
 
-    return json(
+    return Response.json(
       {
         success: true,
         capture_session_id: id,
@@ -70,7 +70,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   } catch (error) {
     console.error("[Capture Session] Error:", error);
     
-    return json(
+    return Response.json(
       {
         error: "Failed to create capture session",
         message: error instanceof Error ? error.message : String(error),

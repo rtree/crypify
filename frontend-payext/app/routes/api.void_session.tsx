@@ -10,7 +10,7 @@
  * - proposed_at: timestamp
  */
 
-import { json, type ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
@@ -46,7 +46,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     console.log("[Void Session] Created successfully");
 
-    return json(
+    return Response.json(
       {
         success: true,
         void_session_id: id,
@@ -61,7 +61,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   } catch (error) {
     console.error("[Void Session] Error:", error);
     
-    return json(
+    return Response.json(
       {
         error: "Failed to create void session",
         message: error instanceof Error ? error.message : String(error),

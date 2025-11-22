@@ -5,6 +5,7 @@ api_version = "2025-10"
 
 [[extensions]]
 name = "Crypify - Crypto Payments"
+uid = "f87876ac-a630-e7db-9ae5-6a0ec076d7ef67a78536"
 type = "payments_extension"
 handle = "crypify-payment"
 
