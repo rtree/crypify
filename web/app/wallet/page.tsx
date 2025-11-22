@@ -75,7 +75,7 @@ export default function WalletPage() {
         <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '32px', borderRadius: '12px', marginBottom: '32px', textAlign: 'center' }}>
           <p style={{ fontSize: '14px', opacity: 0.9, marginBottom: '8px' }}>Total Balance</p>
           <p style={{ fontSize: '48px', fontWeight: 'bold' }}>${wallet.balance}</p>
-          <p style={{ fontSize: '14px', opacity: 0.9', marginTop: '8px' }}>USDC</p>
+          <p style={{ fontSize: '14px', opacity: 0.9, marginTop: '8px' }}>USDC</p>
         </div>
 
         <div style={{ background: '#f9f9f9', padding: '24px', borderRadius: '8px', marginBottom: '32px' }}>

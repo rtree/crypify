@@ -1,10 +1,10 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { WalletResponse } from "../types";
 import { resolveEmailFromToken, getWalletInfo } from "../services/cdp";
 
 const router = Router();
 
-router.get("/", async (req, res) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
     const token = req.query.token as string;
 

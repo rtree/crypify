@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import purchaseRoute from "./routes/purchase";
 import payRoute from "./routes/pay";
@@ -15,7 +15,7 @@ app.use("/pay", payRoute);
 app.use("/wallet", walletRoute);
 
 // Health check
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response) => {
   res.json({ status: "ok", service: "crypify-api" });
 });
 

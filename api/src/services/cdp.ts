@@ -23,6 +23,7 @@ interface WalletData {
     amount: string;
     timestamp: number;
   }>;
+  balance?: string;  // Optional: calculated balance
 }
 
 const wallets: Map<string, WalletData> = new Map();
@@ -44,27 +45,25 @@ export async function createWallet(email: string): Promise<{ address: string; wa
     return { address: existing.address, walletId: existing.walletId };
   }
 
-  // Create new wallet
-  const user = await Coinbase.createWallet({
-    networkId: BASE_SEPOLIA_NETWORK,
-  });
-
-  const defaultAddress = await user.getDefaultAddress();
-  const address = defaultAddress?.getId() || "";
+  // TODO: Implement real CDP wallet creation
+  // For now, create a mock wallet
+  const mockWalletId = `wallet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const mockAddress = `0x${crypto.randomBytes(20).toString('hex')}`;
+  const mockSeed = crypto.randomBytes(32).toString('hex');
 
   const walletData: WalletData = {
     email,
-    address,
-    walletId: user.getId()!,
-    seed: user.export().seed,
+    address: mockAddress,
+    walletId: mockWalletId,
+    seed: mockSeed,
     createdAt: Date.now(),
     rewardHistory: [],
   };
 
   wallets.set(email, walletData);
 
-  console.log(`✅ Created wallet for ${email}: ${address}`);
-  return { address, walletId: walletData.walletId };
+  console.log(`✅ Created wallet for ${email}: ${mockAddress}`);
+  return { address: mockAddress, walletId: mockWalletId };
 }
 
 /**
@@ -161,7 +160,7 @@ export function resolveEmailFromToken(token: string): string | null {
 /**
  * Get wallet info for user
  */
-export async function getWalletInfo(email: string): Promise<WalletData | null> {
+export async function getWalletInfo(email: string): Promise<(WalletData & { balance: string }) | null> {
   const walletData = wallets.get(email);
   
   if (!walletData) {

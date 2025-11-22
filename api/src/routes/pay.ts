@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { PayRequest, PayResponse } from "../types";
 import { getPurchase, markPurchaseAsPaid } from "./purchase";
 import { createWallet, sendUSDC, sendReward, getWalletLinkToken } from "../services/cdp";
@@ -6,7 +6,7 @@ import { sendPaymentEmail } from "../services/email";
 
 const router = Router();
 
-router.post("/", async (req, res) => {
+router.post("/", async (req: Request, res: Response) => {
   try {
     const { purchaseId, email }: PayRequest = req.body;
 

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { PurchaseRequest, PurchaseResponse, Purchase } from "../types";
 
 const router = Router();
@@ -17,7 +17,7 @@ const prices: Map<string, number> = new Map([
   ["cap", 15],
 ]);
 
-router.post("/", (req, res) => {
+router.post("/", (req: Request, res: Response) => {
   try {
     const { sku, qty, email }: PurchaseRequest = req.body;
 
