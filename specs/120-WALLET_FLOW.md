@@ -6,13 +6,15 @@
 
 ## 📌 概要
 
-**エンドポイント**: `https://wallet.crypfy.dev/start` (GET)  
+**エンドポイント**: `https://crypfy-wallet-a31f697f-XXXXXXXXXX.us-west1.run.app/start` (GET)  
 **目的**: メールのリンクをクリックした顧客に、専用のCrypto Walletを表示する。
 
 **トリガー**: メール内のリンククリック  
-**URL例**: `https://wallet.crypfy.dev/start?token=xxx`  
+**URL例**: `https://crypfy-wallet-a31f697f-[HASH].us-west1.run.app/start?token=xxx`  
 **認証**: JWT token検証 → Passkey（Face ID / Touch ID）（Phase 2）  
 **技術**: Next.js 15 + @base-org/account + @coinbase/onchainkit（Phase 2以降）
+
+> **Note**: Cloud RunのデプロイURLは `https://[SERVICE_NAME]-[HASH].us-west1.run.app` 形式になります。実際のURLはデプロイ後に確認してください。
 
 ---
 
@@ -21,7 +23,7 @@
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │  1. 顧客がメール内のリンクをクリック                        │
-│     https://wallet.crypfy.dev/start?token=xxx               │
+│     https://crypfy-wallet-a31f697f-xxx.us-west1.run.app/start?token=xxx │
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -94,7 +96,7 @@ export default function StartPage() {
 
 ```bash
 # Cloud Run デプロイ後
-curl https://wallet.crypfy.dev/start?token=dummy
+curl https://crypfy-wallet-a31f697f-[HASH].us-west1.run.app/start?token=dummy
 # → "🎉 Wallet起動しました" が表示されればOK
 ```
 
@@ -351,16 +353,20 @@ export function verifyToken(token: string): TokenPayload | null {
    ```bash
    # GitHub Actions経由でデプロイ済み
    # または手動デプロイ
-   gcloud run deploy crypify-wallet-ui \
-     --image gcr.io/ethglobal-479011/crypify-wallet-ui \
+   gcloud run deploy crypfy-wallet-a31f697f \
+     --image gcr.io/ethglobal-479011/crypfy-wallet-a31f697f \
      --platform managed \
-     --region us-central1
+     --region us-west1
    ```
 
 2. **ブラウザで確認**
 
    ```bash
-   curl https://wallet.crypfy.dev/start?token=dummy
+   # 実際のURLを確認
+   gcloud run services describe crypfy-wallet-a31f697f --region us-west1 --format='value(status.url)'
+   
+   # そのURLでアクセステスト
+   curl https://crypfy-wallet-a31f697f-[HASH].us-west1.run.app/start?token=dummy
    # → "🎉 Wallet起動しました" が表示されればOK
    ```
 
@@ -461,7 +467,7 @@ gcloud secrets versions access latest --secret="JWT_SECRET"
 - [ ] Next.js 15プロジェクト作成
 - [ ] `/app/start/page.tsx` でダミー画面表示
 - [ ] Cloud Run or Vercel デプロイ
-- [ ] `https://wallet.crypfy.dev/start?token=dummy` でアクセス確認
+- [ ] Cloud Run URLでアクセス確認（`gcloud run services describe`で確認）
 
 ### Phase 2（CDP統合）
 

@@ -6,12 +6,14 @@
 
 ## 📌 概要
 
-**エンドポイント**: `https://crypfy-webhook.run.app/api/webhooks/orders_paid` (POST)  
+**エンドポイント**: `https://crypfy-webhook-ed964dc6-XXXXXXXXXX.us-west1.run.app/api/webhooks/orders_paid` (POST)  
 **目的**: Shopifyで注文が確定（決済完了）した時に、自動的にCrypto Walletを作成し、顧客にメールでアクセスリンクを送信する。
 
 **トリガー**: Shopify `orders/paid` Webhook（Shopifyが自動送信）  
 **メソッド**: POST  
 **認証**: HMAC-SHA256署名（Shopifyが自動付与、`authenticate.webhook()`で検証）
+
+> **Note**: Cloud RunのデプロイURLは `https://[SERVICE_NAME]-[HASH].us-west1.run.app` 形式になります。実際のURLはデプロイ後に確認してください。
 
 ---
 
@@ -25,7 +27,7 @@
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
 │  2. Shopify が orders/paid Webhook を送信                   │
-│     POST https://crypfy-webhook.run.app/api/webhooks/orders_paid │
+│     POST https://crypfy-webhook-ed964dc6-xxx.us-west1.run.app/api/webhooks/orders_paid │
 │                                                             │
 │     Headers:                                                │
 │       X-Shopify-Topic: orders/paid                          │
@@ -79,7 +81,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  6. 顧客がメールを受信 (Phase 2以降)                        │
 │     件名: 🎉 Crypto Walletをプレゼント！                    │
-│     本文: [Walletを開く] https://wallet.crypfy.dev/start?token=xxx │
+│     本文: [Walletを開く] https://crypfy-wallet-a31f697f-xxx.us-west1.run.app/start?token=xxx │
 └─────────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -133,13 +135,14 @@ export async function action({ request }: ActionFunctionArgs) {
 2. **Create webhook**:
    - Event: `Order payment`
    - Format: `JSON`
-   - URL: `https://crypfy-webhook.run.app/api/webhooks/orders_paid`
+   - URL: `https://crypfy-webhook-ed964dc6-[HASH].us-west1.run.app/api/webhooks/orders_paid`
+   - ※ 実際のURLはCloud Runデプロイ後に `gcloud run services describe crypfy-webhook-ed964dc6 --region us-west1 --format='value(status.url)'` で確認
 3. **Test order**:
    - Bogus Gateway (カード番号: `1`)
    - Complete Order
 4. **Cloud Run Logs確認**:
    ```bash
-   gcloud run logs read crypfy-webhook --region us-west1 --limit 50
+   gcloud run logs read crypfy-webhook-ed964dc6 --region us-west1 --limit 50
    ```
 
 ### 期待される出力
@@ -219,7 +222,7 @@ export async function action({ request }: ActionFunctionArgs) {
       <h1>お買い上げありがとうございます！</h1>
       <p>あなた専用のCrypto Walletを用意しました。</p>
       <p>購入額の10%（${rewardAmount} USDC）をプレゼント🎁</p>
-      <a href="https://wallet.crypfy.dev/start?token=${token}">
+      <a href="https://crypfy-wallet-a31f697f-xxx.us-west1.run.app/start?token=${token}">
         👉 Walletを開く
       </a>
     `,
@@ -323,8 +326,8 @@ if (decoded.exp < Date.now() / 1000) {
 
 2. **Cloud Run確認**:
    ```bash
-   gcloud run services describe crypfy-webhook --region us-west1
-   # URL確認: https://crypfy-webhook-xxxxx.run.app
+   gcloud run services describe crypfy-webhook-ed964dc6 --region us-west1
+   # URL確認: https://crypfy-webhook-ed964dc6-xxxxx.us-west1.run.app
    ```
 
 3. **HMAC検証エラー**:
@@ -348,7 +351,7 @@ tail -f /path/to/logs
 
 ```bash
 # Shopify Webhookをシミュレート
-curl -X POST https://crypfy-webhook.run.app/api/webhooks/orders_paid \
+curl -X POST https://crypfy-webhook-ed964dc6-[HASH].us-west1.run.app/api/webhooks/orders_paid \
   -H "Content-Type: application/json" \
   -H "X-Shopify-Topic: orders/paid" \
   -H "X-Shopify-Hmac-Sha256: $(echo -n '{"id":123}' | openssl dgst -sha256 -hmac "$SHOPIFY_API_SECRET" -binary | base64)" \
