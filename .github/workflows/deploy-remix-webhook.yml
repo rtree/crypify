@@ -19,6 +19,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     
     permissions:
       contents: read
@@ -48,7 +49,18 @@ jobs:
       
       - name: Push Docker image to Artifact Registry
         run: |
-          docker push $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }}
+          echo "Pushing image with SHA: ${{ github.sha }}"
+          docker push $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }} &
+          PUSH_PID=$!
+          
+          # Show progress
+          while kill -0 $PUSH_PID 2>/dev/null; do
+            echo "Push in progress..."
+            sleep 10
+          done
+          wait $PUSH_PID
+          
+          echo "Pushing latest tag..."
           docker push $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
       
       - name: Deploy to Cloud Run
