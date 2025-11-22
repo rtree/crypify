@@ -1,8 +1,8 @@
-# crypify
+# crypfy
 
 ## 🎯 プロジェクト概要
 
-**crypify**は、Shopifyの**Payment Extension**技術を使用し、チェックアウト画面で「クレジットカード」「PayPal」と並んで「Crypto (USDC on Base)」を選択できるようにします。
+**crypfy**は、Shopifyの**Payment Extension**技術を使用し、チェックアウト画面で「クレジットカード」「PayPal」と並んで「Crypto (USDC on Base)」を選択できるようにします。
 
 ### 解決する課題
 - **Buyer側**: Cryptoを持っていなくても、カードでUSDCを購入して即座に支払い可能

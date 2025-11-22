@@ -6,8 +6,8 @@
 api_version = "2025-07"
 
 [[extensions]]
-name = "crypify-checkout-ui"
-handle = "crypify-checkout-ui"
+name = "crypfy-checkout-ui"
+handle = "crypfy-checkout-ui"
 type = "ui_extension"
 uid = "2802aa3e-1186-ec8b-e96c-5f749357a2613c55ecd8"
 

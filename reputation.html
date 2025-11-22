@@ -7,7 +7,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-        #crypify-reputation-widget {
+        #crypfy-reputation-widget {
             /*
               - 外側の背景を透明に設定し、Shopifyサイトの背景に馴染むようにしました。
               - カードの背景色をベージュ系の #fdfdfa に変更しました。
@@ -37,7 +37,7 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        #crypify-reputation-widget .trust-records-container {
+        #crypfy-reputation-widget .trust-records-container {
             width: 100%;
             max-width: 600px;
             background-color: var(--card-bg-color);
@@ -47,7 +47,7 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
-        #crypify-reputation-widget .header {
+        #crypfy-reputation-widget .header {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -56,7 +56,7 @@
             margin-bottom: 20px;
         }
 
-        #crypify-reputation-widget .header .icon {
+        #crypfy-reputation-widget .header .icon {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -66,25 +66,25 @@
             border-radius: 50%;
         }
 
-        #crypify-reputation-widget .header .icon svg {
+        #crypfy-reputation-widget .header .icon svg {
             width: 28px; /* Increased from 24px */
             height: 28px; /* Increased from 24px */
             color: var(--verified-color); /* Changed from --warning-icon-color */
         }
 
-        #crypify-reputation-widget .header h1 {
+        #crypfy-reputation-widget .header h1 {
             font-size: 1.25em; /* Changed from rem to em */
             font-weight: 600;
             margin: 0;
         }
 
-        #crypify-reputation-widget .header p {
+        #crypfy-reputation-widget .header p {
             font-size: 0.875em; /* Changed from rem to em */
             color: var(--text-secondary);
             margin: 0;
         }
 
-        #crypify-reputation-widget .seller-summary {
+        #crypfy-reputation-widget .seller-summary {
             display: flex;
             align-items: center;
             gap: 16px;
@@ -93,7 +93,7 @@
             margin-bottom: 20px;
         }
 
-        #crypify-reputation-widget .seller-summary .avatar {
+        #crypfy-reputation-widget .seller-summary .avatar {
             width: 48px;
             height: 48px;
             border-radius: 50%;
@@ -101,7 +101,7 @@
             border: 2px solid var(--border-color);
         }
         
-        #crypify-reputation-widget .seller-summary .avatar-placeholder {
+        #crypfy-reputation-widget .seller-summary .avatar-placeholder {
             width: 48px;
             height: 48px;
             border-radius: 50%;
@@ -111,13 +111,13 @@
             justify-content: center;
         }
 
-        #crypify-reputation-widget .seller-summary .info h2 {
+        #crypfy-reputation-widget .seller-summary .info h2 {
             font-size: 1.125em; /* Changed from rem to em */
             font-weight: 600;
             margin: 0 0 4px 0;
         }
 
-        #crypify-reputation-widget .seller-summary .info p {
+        #crypfy-reputation-widget .seller-summary .info p {
             display: flex;
             align-items: center;
             gap: 6px;
@@ -126,23 +126,23 @@
             margin: 0;
         }
         
-        #crypify-reputation-widget .seller-summary .info p .warning-icon {
+        #crypfy-reputation-widget .seller-summary .info p .warning-icon {
             color: var(--warning-icon-color);
         }
 
-        #crypify-reputation-widget .seller-summary .info .verified {
+        #crypfy-reputation-widget .seller-summary .info .verified {
             color: var(--verified-color);
             font-weight: 500;
         }
 
-        #crypify-reputation-widget .category-tabs {
+        #crypfy-reputation-widget .category-tabs {
             display: flex;
             gap: 8px;
             margin-bottom: 24px;
             flex-wrap: wrap;
         }
 
-        #crypify-reputation-widget .category-tabs button {
+        #crypfy-reputation-widget .category-tabs button {
             display: flex;
             align-items: center;
             gap: 6px;
@@ -157,17 +157,17 @@
             color: var(--text-secondary);
         }
         
-        #crypify-reputation-widget .category-tabs button:hover {
+        #crypfy-reputation-widget .category-tabs button:hover {
             background-color: #e5e7eb;
         }
 
-        #crypify-reputation-widget .category-tabs button.active {
+        #crypfy-reputation-widget .category-tabs button.active {
             background-color: var(--text-primary);
             color: var(--card-bg-color);
             border-color: var(--text-primary);
         }
         
-        #crypify-reputation-widget .category-tabs button .count {
+        #crypfy-reputation-widget .category-tabs button .count {
             background-color: #e5e7eb;
             color: var(--text-secondary);
             padding: 2px 6px;
@@ -175,32 +175,32 @@
             font-size: 0.75em; /* Changed from rem to em */
         }
         
-        #crypify-reputation-widget .category-tabs button.active .count {
+        #crypfy-reputation-widget .category-tabs button.active .count {
             background-color: #4b5563;
             color: #e5e7eb;
         }
 
-        #crypify-reputation-widget .records-list {
+        #crypfy-reputation-widget .records-list {
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        #crypify-reputation-widget .record-card {
+        #crypfy-reputation-widget .record-card {
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 16px;
             background-color: #ffffff; /* Changed from var(--card-bg-color) */
         }
 
-        #crypify-reputation-widget .record-card .card-header {
+        #crypfy-reputation-widget .record-card .card-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 12px;
         }
 
-        #crypify-reputation-widget .record-card .category {
+        #crypfy-reputation-widget .record-card .category {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -208,17 +208,17 @@
             font-weight: 600;
         }
         
-        #crypify-reputation-widget .record-card .category .icon {
+        #crypfy-reputation-widget .record-card .category .icon {
             color: var(--text-primary);
         }
 
-        #crypify-reputation-widget .record-card .meta {
+        #crypfy-reputation-widget .record-card .meta {
             font-size: 0.875em; /* Changed from rem to em */
             color: var(--text-secondary);
             margin-bottom: 12px;
         }
 
-        #crypify-reputation-widget .record-card ul {
+        #crypfy-reputation-widget .record-card ul {
             list-style-position: inside;
             padding-left: 4px;
             margin: 0;
@@ -226,15 +226,15 @@
             color: var(--text-primary);
         }
 
-        #crypify-reputation-widget .record-card li {
+        #crypfy-reputation-widget .record-card li {
             margin-bottom: 6px;
         }
         
-        #crypify-reputation-widget .record-card li::marker {
+        #crypfy-reputation-widget .record-card li::marker {
             color: var(--text-secondary);
         }
 
-        #crypify-reputation-widget .record-card .eas-link {
+        #crypfy-reputation-widget .record-card .eas-link {
             display: inline-block;
             font-size: 0.875em; /* Changed from rem to em */
             font-weight: 500;
@@ -243,13 +243,13 @@
             transition: color 0.2s ease;
         }
         
-        #crypify-reputation-widget .record-card .eas-link:hover {
+        #crypfy-reputation-widget .record-card .eas-link:hover {
             color: #1d4ed8;
             text-decoration: underline;
         }
     </style>
 
-<div id="crypify-reputation-widget">
+<div id="crypfy-reputation-widget">
     <div class="trust-records-container">
         <div class="header">
             <div class="icon">
@@ -365,8 +365,8 @@
 <script>
 (function() {
     // Ensure the script runs after the element is loaded, or wrap in a function to be called.
-    // This script targets elements within the '#crypify-reputation-widget'
-    const widget = document.querySelector('#crypify-reputation-widget');
+    // This script targets elements within the '#crypfy-reputation-widget'
+    const widget = document.querySelector('#crypfy-reputation-widget');
     if (!widget) {
         // If the widget is not found, you can wait for DOMContentLoaded or just return.
         // For Shopify themes, it's often better to place the script tag after the HTML.

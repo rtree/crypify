@@ -87,7 +87,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const draftOrderResponse = await admin.graphql(draftOrderMutation, {
       variables: {
         input: {
-          email: customer?.email || "crypto-payment@crypify.app",
+          email: customer?.email || "crypto-payment@crypfy.app",
           note: `Crypto Payment - USDC on Base\nTransaction Hash: ${txHash}\nWallet: ${walletAddress || 'Unknown'}`,
           customAttributes: [
             { key: "payment_method", value: "USDC on Base" },

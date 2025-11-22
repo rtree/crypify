@@ -22,7 +22,7 @@
 
 ```bash
 # 新規プロジェクト作成（必要な場合）
-gcloud projects create crypify-prod --name="Crypify Production"
+gcloud projects create crypfy-prod --name="Crypify Production"
 
 # プロジェクトID確認
 gcloud projects list
@@ -31,7 +31,7 @@ gcloud projects list
 gcloud config set project <YOUR_PROJECT_ID>
 ```
 
-**取得する値**: `GCP_PROJECT_ID` (例: `crypify-prod`)
+**取得する値**: `GCP_PROJECT_ID` (例: `crypfy-prod`)
 
 ---
 
@@ -66,7 +66,7 @@ SA_EMAIL=$(gcloud iam service-accounts list \
   --format="value(email)")
 
 echo $SA_EMAIL
-# 出力例: github-actions@crypify-prod.iam.gserviceaccount.com
+# 出力例: github-actions@crypfy-prod.iam.gserviceaccount.com
 # deployment-buenos-2025@ethglobal-479011.iam.gserviceaccount.com
 ```
 
@@ -121,7 +121,7 @@ cat ~/github-actions-key.json
 
 ### 2.1 リポジトリのSecrets設定画面へ移動
 
-1. GitHubリポジトリ: `https://github.com/rtree/crypify`
+1. GitHubリポジトリ: `https://github.com/rtree/crypfy`
 2. `Settings` タブ
 3. 左メニュー: `Secrets and variables` → `Actions`
 4. `New repository secret` ボタン
@@ -134,12 +134,12 @@ cat ~/github-actions-key.json
 
 | Name | Value | 説明 |
 |------|-------|------|
-| `GCP_PROJECT_ID` | `crypify-prod` など | GCPプロジェクトID |
+| `GCP_PROJECT_ID` | `crypfy-prod` など | GCPプロジェクトID |
 | `GCP_SA_KEY` | `{"type": "service_account", ...}` | サービスアカウントのJSON全体 |
 
 **登録手順**:
 1. `Name`: `GCP_PROJECT_ID`
-2. `Secret`: プロジェクトID（例: `crypify-prod`）
+2. `Secret`: プロジェクトID（例: `crypfy-prod`）
 3. `Add secret`
 4. 同様に `GCP_SA_KEY` も登録（JSONファイルの中身をそのままペースト）
 
@@ -225,7 +225,7 @@ gcloud secrets list
 **または**:
 ```bash
 # frontend-payext/shopify.app.toml から確認
-cat /home/araki/crypify/frontend-payext/shopify.app.toml | grep client_id
+cat /home/araki/crypfy/frontend-payext/shopify.app.toml | grep client_id
 ```
 
 **例**:
@@ -253,7 +253,7 @@ client_id = "a1b2c3d4e5f6g7h8"
 
 ```bash
 # .envファイルから確認
-cat /home/araki/crypify/frontend-payext/.env | grep SHOPIFY_API
+cat /home/araki/crypfy/frontend-payext/.env | grep SHOPIFY_API
 ```
 
 **出力例**:
@@ -279,7 +279,7 @@ SHOPIFY_API_SECRET=shpss_1234567890abcdef
 1. プロジェクトダッシュボード
 2. `API Keys` セクション
 3. `Create API Key` ボタン
-4. Key名を入力（例: `crypify-production`）
+4. Key名を入力（例: `crypfy-production`）
 5. 権限選択:
    - ✅ `wallet:read`
    - ✅ `wallet:create`
@@ -373,17 +373,17 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 ```bash
 # ローカルでDockerビルドテスト
-cd /home/araki/crypify/frontend-payext
+cd /home/araki/crypfy/frontend-payext
 docker build -t test-image .
 
 # GCRにプッシュテスト（GCP認証後）
 gcloud auth configure-docker gcr.io
-docker tag test-image gcr.io/<YOUR_PROJECT_ID>/crypify-webhook:test
-docker push gcr.io/<YOUR_PROJECT_ID>/crypify-webhook:test
+docker tag test-image gcr.io/<YOUR_PROJECT_ID>/crypfy-webhook:test
+docker push gcr.io/<YOUR_PROJECT_ID>/crypfy-webhook:test
 
 # Cloud Runデプロイテスト
-gcloud run deploy crypify-webhook-test \
-  --image gcr.io/<YOUR_PROJECT_ID>/crypify-webhook:test \
+gcloud run deploy crypfy-webhook-test \
+  --image gcr.io/<YOUR_PROJECT_ID>/crypfy-webhook:test \
   --region us-west1 \
   --platform managed \
   --allow-unauthenticated
@@ -400,7 +400,7 @@ git commit -m "test: CI/CD pipeline"
 git push origin main
 
 # GitHub Actionsの実行確認
-# https://github.com/rtree/crypify/actions
+# https://github.com/rtree/crypfy/actions
 ```
 
 **確認項目**:
@@ -415,12 +415,12 @@ git push origin main
 
 ```bash
 # Cloud RunサービスURL取得
-gcloud run services describe crypify-webhook \
+gcloud run services describe crypfy-webhook \
   --region us-west1 \
   --format="value(status.url)"
 
 # ヘルスチェック（エンドポイントが実装されている場合）
-curl https://crypify-webhook-xxxxx.run.app/health
+curl https://crypfy-webhook-xxxxx.run.app/health
 ```
 
 ---

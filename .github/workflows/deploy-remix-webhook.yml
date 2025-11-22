@@ -7,11 +7,12 @@ on:
     paths:
       - 'frontend-payext/**'
       - '.github/workflows/deploy-remix-webhook.yml'
+  workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: us-west1
-  SERVICE_NAME: crypify-webhook
+  SERVICE_NAME: crypfy-webhook
 
 jobs:
   deploy:

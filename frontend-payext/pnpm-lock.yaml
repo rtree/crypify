@@ -109,7 +109,7 @@ importers:
         specifier: ^6.3.6
         version: 6.4.1(@types/node@22.19.1)(jiti@2.6.1)(yaml@2.8.1)
 
-  extensions/crypify-checkout-ui:
+  extensions/crypfy-checkout-ui:
     dependencies:
       '@shopify/ui-extensions-react':
         specifier: ^2025.7.0

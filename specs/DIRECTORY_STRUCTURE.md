@@ -1,4 +1,4 @@
-# crypify ディレクトリ構成
+# crypfy ディレクトリ構成
 
 **最終更新**: 2025-11-21
 
@@ -7,7 +7,7 @@
 ## 📁 全体構成
 
 ```
-/home/araki/crypify/                    # プロジェクトルート
+/home/araki/crypfy/                    # プロジェクトルート
 ├── frontend-payext/                    # Shopify Payment Extension (Gitサブモジュール)
 │   ├── app/                            # Remix App コード
 │   │   ├── routes/                     # ルート定義
@@ -27,14 +27,14 @@
 │   │   └── shopify.server.ts          # Shopify API クライアント
 │   │
 │   ├── extensions/                     # Shopify Extensions
-│   │   ├── crypify-checkout-ui/        # Checkout UI Extension ✅
+│   │   ├── crypfy-checkout-ui/        # Checkout UI Extension ✅
 │   │   │   ├── src/
 │   │   │   │   └── Checkout.jsx
 │   │   │   ├── locales/
 │   │   │   │   ├── en.default.json
 │   │   │   │   └── fr.json
 │   │   │   └── shopify.extension.toml
-│   │   └── crypify-payment/            # Payment Extension ✅ (手動作成)
+│   │   └── crypfy-payment/            # Payment Extension ✅ (手動作成)
 │   │       └── shopify.extension.toml
 │   │
 │   ├── prisma/                         # データベーススキーマ
@@ -90,8 +90,8 @@
 
 ```bash
 # 必ず以下のディレクトリで実行:
-cd /home/araki/crypify/frontend-payext
-pwd  # 出力: /home/araki/crypify/frontend-payext
+cd /home/araki/crypfy/frontend-payext
+pwd  # 出力: /home/araki/crypfy/frontend-payext
 
 # Extension生成コマンド:
 pnpm shopify app generate extension
@@ -101,7 +101,7 @@ pnpm shopify app generate extension
 
 ```bash
 # 開発サーバー起動:
-cd /home/araki/crypify/frontend-payext
+cd /home/araki/crypfy/frontend-payext
 pnpm shopify app dev
 ```
 
@@ -134,16 +134,16 @@ pnpm shopify app dev
 **重要**: CLIでは生成不可のため手動作成
 
 ```bash
-cd /home/araki/crypify/frontend-payext
-mkdir -p extensions/crypify-payment
-vim extensions/crypify-payment/shopify.extension.toml
+cd /home/araki/crypfy/frontend-payext
+mkdir -p extensions/crypfy-payment
+vim extensions/crypfy-payment/shopify.extension.toml
 ```
 
 **実際の構成**:
 ```
 frontend-payext/
 ├── extensions/
-│   └── crypify-payment/
+│   └── crypfy-payment/
 │       └── shopify.extension.toml  # 手動作成 ✅
 ```
 
@@ -157,25 +157,25 @@ frontend-payext/
 
 **ハッカソン後の移行計画** 🎯:
 - Payments Partner承認後、`target: payments.custom-onsite.render` へ変更
-- `ui_extension_handle: crypify-checkout-ui` でCheckout UIと連携（iframe統合）
+- `ui_extension_handle: crypfy-checkout-ui` でCheckout UIと連携（iframe統合）
 - その他のAPIエンドポイントは変更不要
 
 ### 2. Checkout UI Extension ✅
 ```bash
-cd /home/araki/crypify/frontend-payext
+cd /home/araki/crypfy/frontend-payext
 pnpm shopify app generate extension
 
 # 選択肢:
 # Type: Checkout UI Extension
-# Name: crypify-checkout-ui
+# Name: crypfy-checkout-ui
 ```
 
 **生成された構成**:
 ```
 frontend-payext/
 ├── extensions/
-│   ├── crypify-payment/
-│   └── crypify-checkout-ui/  ✅
+│   ├── crypfy-payment/
+│   └── crypfy-checkout-ui/  ✅
 │       ├── src/
 │       │   └── Checkout.jsx
 │       ├── locales/
@@ -207,12 +207,12 @@ app/routes/
 
 | ファイル | パス | 用途 |
 |---------|------|------|
-| **App設定** | `/home/araki/crypify/frontend-payext/shopify.app.toml` | Shopify App全体設定 |
-| **Package定義** | `/home/araki/crypify/frontend-payext/package.json` | 依存関係管理 |
-| **DB Schema** | `/home/araki/crypify/frontend-payext/prisma/schema.prisma` | データベース構造 |
-| **Extension格納** | `/home/araki/crypify/frontend-payext/extensions/` | Payment/Checkout UI Extensions |
-| **Routes** | `/home/araki/crypify/frontend-payext/app/routes/` | API & ページルート |
-| **Shopify Client** | `/home/araki/crypify/frontend-payext/app/shopify.server.ts` | Shopify API連携 |
+| **App設定** | `/home/araki/crypfy/frontend-payext/shopify.app.toml` | Shopify App全体設定 |
+| **Package定義** | `/home/araki/crypfy/frontend-payext/package.json` | 依存関係管理 |
+| **DB Schema** | `/home/araki/crypfy/frontend-payext/prisma/schema.prisma` | データベース構造 |
+| **Extension格納** | `/home/araki/crypfy/frontend-payext/extensions/` | Payment/Checkout UI Extensions |
+| **Routes** | `/home/araki/crypfy/frontend-payext/app/routes/` | API & ページルート |
+| **Shopify Client** | `/home/araki/crypfy/frontend-payext/app/shopify.server.ts` | Shopify API連携 |
 
 ---
 
@@ -220,7 +220,7 @@ app/routes/
 
 ### 1. Extension生成フェーズ (現在)
 ```bash
-cd /home/araki/crypify/frontend-payext
+cd /home/araki/crypfy/frontend-payext
 pnpm shopify app generate extension  # Payment Extension
 pnpm shopify app generate extension  # Checkout UI Extension
 ```
@@ -228,21 +228,21 @@ pnpm shopify app generate extension  # Checkout UI Extension
 ### 2. 設定フェーズ
 ```bash
 # Payment Extension設定
-vim extensions/crypify-payment/shopify.extension.toml
+vim extensions/crypfy-payment/shopify.extension.toml
 
 # Checkout UI Extension設定
-vim extensions/crypify-checkout-ui/shopify.ui.extension.toml
+vim extensions/crypfy-checkout-ui/shopify.ui.extension.toml
 ```
 
 ### 3. 開発フェーズ
 ```bash
-cd /home/araki/crypify/frontend-payext
+cd /home/araki/crypfy/frontend-payext
 pnpm shopify app dev  # 開発サーバー起動
 ```
 
 ### 4. デプロイフェーズ
 ```bash
-cd /home/araki/crypify/frontend-payext
+cd /home/araki/crypfy/frontend-payext
 pnpm shopify app deploy
 ```
 
