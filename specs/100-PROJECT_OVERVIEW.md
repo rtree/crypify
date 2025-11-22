@@ -1,4 +1,4 @@
-# crypify - プロジェクト全体構造ドキュメント
+# crypfy - プロジェクト全体構造ドキュメント
 
 **作成日**: 2025-11-21  
 **最終更新**: 2025-11-22  
@@ -46,7 +46,7 @@
 │                                                             │
 │  【Phase 1: 空実装】                                        │
 │  1. Webhook受信（200返すだけ）                              │
-│  2. 固定文面メール送信（リンク: https://wallet.crypify.dev/start） │
+│  2. 固定文面メール送信（リンク: https://wallet.crypfy.dev/start） │
 │                                                             │
 │  【Phase 2: CDP実装】                                       │
 │  1. CDP Embedded Wallet作成                                 │
@@ -57,14 +57,14 @@
               (顧客が**別メール**を受信)
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│         別メール内容（crypifyから送信）                      │
+│         別メール内容（crypfyから送信）                      │
 │                                                             │
 │  件名: 🎉 Crypto Walletをプレゼント！                       │
 │  本文:                                                      │
 │    お買い上げありがとうございます！                         │
 │    あなた専用のCrypto Walletを用意しました。                │
 │                                                             │
-│    👉 [Walletを開く] https://wallet.crypify.dev/start       │
+│    👉 [Walletを開く] https://wallet.crypfy.dev/start       │
 │       (Phase2以降: ?token=xxx を付与)                       │
 └─────────────────────────────────────────────────────────────┘
                           ↓
@@ -98,7 +98,7 @@
   1. Webhook受信 → 200返す（HMAC検証は形だけ）
   2. 固定文面メール送信
      - 件名: "🎉 Crypto Walletをプレゼント！"
-     - リンク: `https://wallet.crypify.dev/start`（固定URL）
+     - リンク: `https://wallet.crypfy.dev/start`（固定URL）
   
   **Phase 2（CDP実装）**:
   1. HMAC署名検証（本実装）
@@ -116,7 +116,7 @@
 
 #### 2. Wallet Access Page (Next.js - 別サービス) 🔥
 - **役割**: メールリンクから開くCrypto Wallet UI
-- **URL**: `https://wallet.crypify.dev/start`（Phase1）、`/start?token=xxx`（Phase2以降）
+- **URL**: `https://wallet.crypfy.dev/start`（Phase1）、`/start?token=xxx`（Phase2以降）
 - **機能（Phase別）**:
   
   **Phase 1（空UI）**:
@@ -140,10 +140,10 @@
 #### 3. Shopify Order Metafields (DB代わり - Phase2以降) ✅
 - **役割**: Wallet情報の永続化（**外部DB不要**、Phase1では未使用）
 - **保存データ**:
-  - Tag: `crypify_rewarded` (冪等性フラグ)
-  - Metafield: `crypify.wallet_address` (Text)
-  - Metafield: `crypify.reward_tx_hash` (Text)
-  - Metafield: `crypify.reward_amount` (Decimal)
+  - Tag: `crypfy_rewarded` (冪等性フラグ)
+  - Metafield: `crypfy.wallet_address` (Text)
+  - Metafield: `crypfy.reward_tx_hash` (Text)
+  - Metafield: `crypfy.reward_amount` (Decimal)
 - **利点**:
   - Cloud Runデプロイが超簡単（DATABASE_URL不要）
   - 再起動・スケールで状態が消えない
@@ -158,8 +158,8 @@
 - **戦略**: **GitHub Actions → Cloud Run自動デプロイを最初に通す**
 - **理由**: "コード反映が間に合わない事故"を潰す、デモ詰みリスク回避
 - **構成**:
-  - **Remix (Webhook)**: `crypify-webhook.run.app`
-  - **Next (Wallet UI)**: `wallet.crypify.dev` (Cloud Run or Vercel)
+  - **Remix (Webhook)**: `crypfy-webhook.run.app`
+  - **Next (Wallet UI)**: `wallet.crypfy.dev` (Cloud Run or Vercel)
 - **設定**: `min-instances=1` でコールドスタート回避、`concurrency=1-5` で安全性確保
 
 ---
@@ -204,8 +204,8 @@
 **タスク（順不同OK）**:
 1. ⏳ **CI/CD最優先**: Remix/Next それぞれ GitHub Actions → Cloud Run自動デプロイ線を通す
    ```bash
-   # Remix → crypify-webhook.run.app
-   # Next → wallet.crypify.dev
+   # Remix → crypfy-webhook.run.app
+   # Next → wallet.crypfy.dev
    ```
 
 2. ⏳ **orders/paid Webhook空実装** (`/app/routes/api.webhooks.orders_paid.tsx`)
@@ -221,7 +221,7 @@
 3. ⏳ **固定文面メール送信** (Remix側 - Nodemailer)
    ```typescript
    // 件名: 🎉 Crypto Walletをプレゼント！
-   // リンク: https://wallet.crypify.dev/start（固定）
+   // リンク: https://wallet.crypfy.dev/start（固定）
    ```
 
 4. ⏳ **Next Wallet空UI** (`/app/start/page.tsx`)
@@ -254,7 +254,7 @@
        session, 
        id: order.id 
      });
-     if (existingOrder.tags?.includes('crypify_rewarded')) {
+     if (existingOrder.tags?.includes('crypfy_rewarded')) {
        return new Response('Already processed', { status: 200 });
      }
 
@@ -265,11 +265,11 @@
      });
 
      // 3) Order Metafields & Tagに保存（DB代わり）
-     existingOrder.tags = `${existingOrder.tags}, crypify_rewarded`;
+     existingOrder.tags = `${existingOrder.tags}, crypfy_rewarded`;
      existingOrder.metafields = [
-       { namespace: 'crypify', key: 'wallet_address', type: 'single_line_text_field', value: walletAddress },
-       { namespace: 'crypify', key: 'reward_tx_hash', type: 'single_line_text_field', value: txHash },
-       { namespace: 'crypify', key: 'reward_amount', type: 'number_decimal', value: String(rewardAmount) },
+       { namespace: 'crypfy', key: 'wallet_address', type: 'single_line_text_field', value: walletAddress },
+       { namespace: 'crypfy', key: 'reward_tx_hash', type: 'single_line_text_field', value: txHash },
+       { namespace: 'crypfy', key: 'reward_amount', type: 'number_decimal', value: String(rewardAmount) },
      ];
      await existingOrder.save({ update: true });
 
@@ -358,7 +358,7 @@
     ```
 15. ⏳ Cloud Runデプロイ
     ```bash
-    gcloud run deploy crypify \
+    gcloud run deploy crypfy \
       --source . \
       --region us-west1 \
       --min-instances 1 \
@@ -392,7 +392,7 @@
 
 **結論**: マイクロペイメント対応 + UX最適化のためBase一択
 
-### crypify の対応
+### crypfy の対応
 
 | CDP製品 | パッケージ | 実装状況 | 賞適格 |
 |---------|----------|---------|--------|
@@ -482,26 +482,26 @@ SHOPIFY_API_SECRET_KEY=shpss_xxx
 
 ### Order Metafields Schema（DB代わり）
 
-**Tag**: `crypify_rewarded`（冪等性フラグ）
+**Tag**: `crypfy_rewarded`（冪等性フラグ）
 
 **Metafields**:
 ```typescript
 {
-  namespace: 'crypify',
+  namespace: 'crypfy',
   key: 'wallet_address',
   type: 'single_line_text_field',
   value: '0x1234...abcd' // Wallet Address
 }
 
 {
-  namespace: 'crypify',
+  namespace: 'crypfy',
   key: 'reward_tx_hash',
   type: 'single_line_text_field',
   value: '0xabcd...1234' // Base Sepolia Transaction Hash
 }
 
 {
-  namespace: 'crypify',
+  namespace: 'crypfy',
   key: 'reward_amount',
   type: 'number_decimal',
   value: '1.50' // USDC Reward Amount
@@ -511,11 +511,11 @@ SHOPIFY_API_SECRET_KEY=shpss_xxx
 **Shopify Admin REST APIで保存**:
 ```typescript
 const order = await admin.rest.resources.Order.find({ session, id: orderId });
-order.tags = `${order.tags}, crypify_rewarded`;
+order.tags = `${order.tags}, crypfy_rewarded`;
 order.metafields = [
-  { namespace: 'crypify', key: 'wallet_address', type: 'single_line_text_field', value: walletAddress },
-  { namespace: 'crypify', key: 'reward_tx_hash', type: 'single_line_text_field', value: txHash },
-  { namespace: 'crypify', key: 'reward_amount', type: 'number_decimal', value: String(rewardAmount) },
+  { namespace: 'crypfy', key: 'wallet_address', type: 'single_line_text_field', value: walletAddress },
+  { namespace: 'crypfy', key: 'reward_tx_hash', type: 'single_line_text_field', value: txHash },
+  { namespace: 'crypfy', key: 'reward_amount', type: 'number_decimal', value: String(rewardAmount) },
 ];
 await order.save({ update: true });
 ```
@@ -564,11 +564,11 @@ CMD ["pnpm", "start"]
 #### Cloud Runデプロイ
 ```bash
 # Docker イメージビルド & プッシュ
-gcloud builds submit --tag gcr.io/PROJECT_ID/crypify
+gcloud builds submit --tag gcr.io/PROJECT_ID/crypfy
 
 # Cloud Runデプロイ（DB無しなので超簡単）
-gcloud run deploy crypify \
-  --image gcr.io/PROJECT_ID/crypify \
+gcloud run deploy crypfy \
+  --image gcr.io/PROJECT_ID/crypfy \
   --region us-west1 \
   --platform managed \
   --min-instances 1 \
@@ -583,7 +583,7 @@ gcloud run deploy crypify \
 ```
 
 ```yaml
-service: crypify
+service: crypfy
 region: us-west1  # Supabaseと同一リージョン推奨
 
 resources:
@@ -616,10 +616,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: google-github-actions/setup-gcloud@v1
-      - run: gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypify
+      - run: gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypfy
       - run: |
-          gcloud run deploy crypify \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypify \
+          gcloud run deploy crypfy \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypfy \
             --region us-west1 \
             --min-instances 1 \
             --max-instances 10
@@ -629,7 +629,7 @@ jobs:
 #### Shopify App URL更新
 ```toml
 # shopify.app.toml
-application_url = "https://crypify-xxx.run.app"
+application_url = "https://crypfy-xxx.run.app"
 embedded = true
 
 [webhooks]
@@ -637,7 +637,7 @@ api_version = "2025-01"
 
 [[webhooks.subscriptions]]
 topics = ["orders/create"]
-uri = "https://crypify-xxx.run.app/api/webhooks/order_created"
+uri = "https://crypfy-xxx.run.app/api/webhooks/order_created"
 ```
 
 ---

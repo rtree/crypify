@@ -1,0 +1,90 @@
+name: Deploy Next.js Wallet UI to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'wallet-ui/**'
+      - '.github/workflows/deploy-next-wallet.yml'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-west1
+  SERVICE_NAME: crypfy-wallet-a31f697f
+  ARTIFACT_REGISTRY: us-west1-docker.pkg.dev
+  REPOSITORY: crypify
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+      
+      - name: Build Docker image
+        run: |
+          docker build -t $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }} \
+            -t $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
+            ./wallet-ui
+      
+      - name: Push Docker image to Artifact Registry
+        run: |
+          docker push $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }}
+          docker push $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
+      
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_NAME \
+            --image $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }} \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated \
+            --min-instances 1 \
+            --max-instances 10 \
+            --memory 512Mi \
+            --cpu 1 \
+            --concurrency 80 \
+            --timeout 30s \
+            --set-env-vars "NODE_ENV=production" \
+            --update-secrets "JWT_SECRET=JWT_SECRET:latest"
+      
+      - name: Get Cloud Run URL
+        id: get-url
+        run: |
+          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
+            --region $REGION \
+            --format 'value(status.url)')
+          echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
+          echo "🚀 Deployed to: $SERVICE_URL"
+      
+      - name: Output deployment info
+        run: |
+          echo "### 🎉 Wallet UI Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Service:** $SERVICE_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** $REGION" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.get-url.outputs.service_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Update email template with: ${{ steps.get-url.outputs.service_url }}/start" >> $GITHUB_STEP_SUMMARY
+          echo "2. Test the wallet access flow" >> $GITHUB_STEP_SUMMARY

@@ -102,7 +102,7 @@ Stripeのように、数行のコードを埋め込むだけ。
 どんなECサイトにも対応。
 
 ```javascript
-import { Crypify } from 'crypify-sdk';
+import { Crypify } from 'crypfy-sdk';
 
 Crypify.initialize('YOUR_API_KEY');
 ```
