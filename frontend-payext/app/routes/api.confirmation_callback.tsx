@@ -11,7 +11,7 @@
  * - proposed_at: timestamp
  */
 
-import { json, type ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
@@ -53,7 +53,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     // Return 2xx status to acknowledge receipt
-    return json(
+    return Response.json(
       {
         success: true,
         confirmation_result,
@@ -68,7 +68,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   } catch (error) {
     console.error("[Confirmation Callback] Error:", error);
     
-    return json(
+    return Response.json(
       {
         error: "Failed to process confirmation callback",
         message: error instanceof Error ? error.message : String(error),

@@ -13,7 +13,7 @@
  * - proposed_at: timestamp
  */
 
-import { json, type ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
@@ -61,7 +61,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     console.log("[Refund Session] Created successfully");
 
     // Return 201 Created status
-    return json(
+    return Response.json(
       {
         success: true,
         refund_session_id: id,
@@ -76,7 +76,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   } catch (error) {
     console.error("[Refund Session] Error:", error);
     
-    return json(
+    return Response.json(
       {
         error: "Failed to create refund session",
         message: error instanceof Error ? error.message : String(error),
