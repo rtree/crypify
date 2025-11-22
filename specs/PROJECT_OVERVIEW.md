@@ -3,11 +3,12 @@
 **作成日**: 2025-11-21  
 **最終更新**: 2025-11-22  
 **Dev Store**: crypfy-dev.myshopify.com (Development Store - Plus相当)  
-**プロジェクト種別**: Shopify Webhook + CDP Embedded Wallets (Remix一本化、**DB無し**)
+**プロジェクト種別**: Shopify Webhook (Remix) + Crypto Wallet UI (Next.js) **分離構成**
 
-**ハッカソン戦略（最小構成）**: 
-- 🎯 **Hackathon Goal**: Bogus決済 → Webhook → CDP Wallet自動発行 → USDC Reward → メール → Passkey認証
-- 🔥 **Early Deploy**: Cloudflare Tunnel → Cloud Run移行（ハッカソン中に本番URL化）
+**ハッカソンMVP戦略（3Phase方式）**: 
+- 🎯 **Phase 1**: UXフロー最速構築（中身空でOK）→ Bogus決済 → Webhook → **別メール** → リンク → Wallet画面起動
+- 🔥 **Phase 2**: CDP本実装差し替え → Wallet自動作成 → USDC Reward送金 → 残高確認
+- ✅ **Phase 3**: セキュリティ強化 → JWT署名、冪等性、エラー処理、デモ演出
 - 🚀 **Post-Hackathon**: Base Mainnet移行、Offsite Payment Extension（Partner承認後）
 
 ---
@@ -15,92 +16,129 @@
 ## 📌 プロジェクト概要
 
 ### 目的
-**Shopifyで購入すると自動でCrypto Walletがもらえる、Web2→Web3オンボーディング体験**を提供。  
-購入額の10%をUSDC Rewardsとして還元し、次回購入や他のWeb3サービスで利用可能にする。
+**「Shopifyで購入 → メール受信 → リンククリック → 自分のCrypto Walletが開く」**という **UXフローを最優先で通す**。  
+購入額の10%をUSDC Rewardsとして還元し、Web2→Web3オンボーディング体験を提供。
 
-### 解決する課題
-| 課題 | 従来の問題 | crypify の解決策 |
-|------|-----------|----------------|
-| **Cryptoへの参入障壁** | ウォレット作成・秘密鍵管理が必要 | 購入だけで自動Wallet配布（Passkey認証） |
-| **Web3ロイヤルティの欠如** | ポイント＝中央集権的、他で使えない | USDC Rewards＝他サービス/DEXで自由に利用可能 |
-| **マーチャント側の複雑性** | Crypto決済統合が技術的に困難 | Shopify Webhookだけで完結 |
-| **高ガス代** | Ethereum Mainnet → $5-50 | Base L2 → $0.001-0.01（マイクロリワード可能） |
+### ハッカソンMVPの原則
+- 🎯 **完成度よりフローの稼働**: 中身が空でもUXが通ればPhase1成功
+- 🔥 **最小セキュリティで動く体験**: Phase1→2→3で段階的に強化
+- ✅ **デモが壊れないCI**: GitHub Actions → Cloud Run自動デプロイを最初に通す
 
 ---
 
-## 🏗️ システムアーキテクチャ
+## 🏗️ システムアーキテクチャ（Remix/Next分離構成）
 
-### ハッカソン版フロー（Bogus決済 + Wallet自動発行）
+### ハッカソンMVPフロー（Phase 1: UX最速構築）
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │              Shopify Checkout (Standard UI)                 │
 │                                                             │
-│  支払い方法:                                                │
-│  ● Bogus Gateway (テスト決済)                              │
-│                                                             │
-│  カード番号: 1 (成功) / 2 (失敗) を入力                     │
-│  [ Complete Order ] ボタンをクリック                        │
+│  支払い方法: Bogus Gateway (カード番号: 1)                  │
+│  [ Complete Order ] → 決済完了                              │
 └─────────────────────────────────────────────────────────────┘
                           ↓
-                   (注文完了 Webhook)
+              (Shopify標準の注文確認メール送信)
+              ※このメールには手を入れない※
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│         Shopify Order Created Webhook                       │
-│         → crypify Backend (Remix App)                       │
+│         orders/paid Webhook → Remix (Cloud Run)             │
 │                                                             │
-│  1. 顧客情報取得 (email, 購入額)                            │
-│  2. CDP Embedded Wallet 作成                                │
-│     - Passkey認証設定                                       │
-│     - ウォレットアドレス生成                                │
-│  3. 購入額の10%をUSDCでエアドロップ                         │
-│     - Base Sepoliaで実行 (テスト)                           │
-│  4. メール送信 (Shopify Email or SendGrid)                  │
-│     - 件名: "🎉 Crypto Walletをプレゼント！"                │
-│     - 本文: Walletアクセスリンク                            │
+│  【Phase 1: 空実装】                                        │
+│  1. Webhook受信（200返すだけ）                              │
+│  2. 固定文面メール送信（リンク: https://wallet.crypify.dev/start） │
+│                                                             │
+│  【Phase 2: CDP実装】                                       │
+│  1. CDP Embedded Wallet作成                                 │
+│  2. USDC Reward送金（購入額10%、Base Sepolia）              │
+│  3. メールリンクに識別子（token）埋め込み                   │
 └─────────────────────────────────────────────────────────────┘
                           ↓
-                  (顧客がメールを開く)
+              (顧客が**別メール**を受信)
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│         Wallet Access Page (/wallet?token=xxx)              │
+│         別メール内容（crypifyから送信）                      │
 │                                                             │
-│  1. 署名付きトークン検証（JWT/HMAC, 有効期限付き）           │
-│  2. Passkey認証 (Face ID / Touch ID)                        │
-│  3. Embedded Wallet表示 (OnchainKit)                        │
-│     - USDC残高表示                                          │
-│     - トランザクション履歴                                  │
-│  4. (将来) 次回購入時に使うボタン                           │
+│  件名: 🎉 Crypto Walletをプレゼント！                       │
+│  本文:                                                      │
+│    お買い上げありがとうございます！                         │
+│    あなた専用のCrypto Walletを用意しました。                │
+│                                                             │
+│    👉 [Walletを開く] https://wallet.crypify.dev/start       │
+│       (Phase2以降: ?token=xxx を付与)                       │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+                  (リンククリック)
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│         Wallet UI (Next.js - 別サービス)                    │
+│                                                             │
+│  【Phase 1: 空UI】                                          │
+│  - "Wallet起動しました" ダミー画面                         │
+│                                                             │
+│  【Phase 2: CDP統合】                                       │
+│  - Token検証 → CDP Embedded Wallet接続                      │
+│  - Passkey認証（Face ID / Touch ID）                        │
+│  - USDC残高表示（OnchainKit）                               │
+│  - トランザクション履歴                                     │
+│                                                             │
+│  【Phase 3: 強化】                                          │
+│  - JWT署名検証、エラー処理、ロード演出                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### コンポーネント構成（ハッカソン最小版）
+### コンポーネント構成（Remix/Next分離）
 
-#### 1. Order Created Webhook Handler (Remix Action) 🔥
-- **役割**: Shopify購入完了時にCDP Wallet自動発行
-- **処理フロー**:
-  1. **HMAC署名検証**（Shopify公式ヘッダー `X-Shopify-Hmac-Sha256`）
-  2. **Idempotency確認**（Order Tagsで `crypify_rewarded` チェック）
-  3. **CDP Embedded Wallet作成**（@coinbase/coinbase-sdk）
-  4. **USDC Reward送金**（購入額10%、Base Sepolia）
-  5. **Order Metafields保存**（wallet_address, tx_hash, reward_amount）
-  6. **Order Tagに `crypify_rewarded` 追加**（冪等性確保）
-  7. **署名付きワンタイムトークン生成**（JWT）
-  8. **メール送信**（Shopify Email API）
-- **技術**: Remix + @coinbase/coinbase-sdk + Shopify Admin REST API
+#### 1. orders/paid Webhook Handler (Remix - Cloud Run) 🔥
+- **役割**: Shopify決済完了時に**別メール**を送信（CDP処理はPhase2以降）
+- **Topic**: `orders/paid`（決済完了トリガー）
+- **処理フロー（Phase別）**:
+  
+  **Phase 1（空実装）**:
+  1. Webhook受信 → 200返す（HMAC検証は形だけ）
+  2. 固定文面メール送信
+     - 件名: "🎉 Crypto Walletをプレゼント！"
+     - リンク: `https://wallet.crypify.dev/start`（固定URL）
+  
+  **Phase 2（CDP実装）**:
+  1. HMAC署名検証（本実装）
+  2. CDP Embedded Wallet作成（@coinbase/coinbase-sdk）
+  3. USDC Reward送金（購入額10%、Base Sepolia）
+  4. Wallet情報をメモリ or Order Metafieldsに保存
+  5. メールリンクに識別子（token）埋め込み
+  
+  **Phase 3（強化）**:
+  1. 冪等性（Order Tagsで重複防止）
+  2. JWT署名トークン（有効期限付き）
+  3. エラー処理・リトライ
 
-#### 2. Wallet Access Page (Remix Route)
-- **役割**: ユーザーがPasskeyでWalletにアクセス
-- **URL**: `/wallet?token=xxx` (JWT署名付き)
-- **機能**:
-  - トークン検証（有効期限、改ざんチェック）
+- **技術**: Remix + Nodemailer（Phase1）、@coinbase/coinbase-sdk（Phase2）
+
+#### 2. Wallet Access Page (Next.js - 別サービス) 🔥
+- **役割**: メールリンクから開くCrypto Wallet UI
+- **URL**: `https://wallet.crypify.dev/start`（Phase1）、`/start?token=xxx`（Phase2以降）
+- **機能（Phase別）**:
+  
+  **Phase 1（空UI）**:
+  - 「Wallet起動しました」ダミー画面のみ
+  - デプロイ確認が目的
+  
+  **Phase 2（CDP統合）**:
+  - Token受け取り → CDP Embedded Wallet接続
   - Passkey認証（@base-org/account）
   - USDC残高表示（OnchainKit）
-  - トランザクション履歴（Base Sepolia Explorer）
-- **技術**: Remix + OnchainKit + @base-org/account
+  - トランザクション履歴表示
+  
+  **Phase 3（強化）**:
+  - JWT署名検証（有効期限、改ざんチェック）
+  - エラー処理（Token無効、Wallet未作成など）
+  - ロード演出、アニメーション
 
-#### 3. Shopify Order Metafields (DB代わり) ✅
-- **役割**: Wallet情報の永続化（**外部DB不要**）
+- **技術**: Next.js 15 + OnchainKit + @base-org/account
+- **デプロイ**: Cloud Run or Vercel（Remixとは**別サービス**）
+
+#### 3. Shopify Order Metafields (DB代わり - Phase2以降) ✅
+- **役割**: Wallet情報の永続化（**外部DB不要**、Phase1では未使用）
 - **保存データ**:
   - Tag: `crypify_rewarded` (冪等性フラグ)
   - Metafield: `crypify.wallet_address` (Text)
@@ -116,9 +154,12 @@
 - **認証**: Passkey（Face ID / Touch ID）
 - **Chain**: Base Sepolia (テスト) → Base Mainnet (本番)
 
-#### 5. GCP Cloud Run (Hosting - ハッカソン中に早期移行) 🔥
-- **戦略**: Cloudflare Tunnel → **早期にCloud Run移行**
-- **理由**: デモ詰みリスク回避、本番URLで安定稼働
+#### 5. GCP Cloud Run (Hosting - Phase1で最優先) 🔥
+- **戦略**: **GitHub Actions → Cloud Run自動デプロイを最初に通す**
+- **理由**: "コード反映が間に合わない事故"を潰す、デモ詰みリスク回避
+- **構成**:
+  - **Remix (Webhook)**: `crypify-webhook.run.app`
+  - **Next (Wallet UI)**: `wallet.crypify.dev` (Cloud Run or Vercel)
 - **設定**: `min-instances=1` でコールドスタート回避、`concurrency=1-5` で安全性確保
 
 ---
@@ -147,15 +188,51 @@
 
 ---
 
-## 📋 実装ステップ（ハッカソン最小構成）
+## 📋 実装ステップ（3Phase方式）
 
-### Phase 1: 基盤構築 ✅
-1. ✅ Shopify App作成 (`pnpm create @shopify/app@latest`)
-2. ✅ 開発環境セットアップ（Cloudflare Tunnel起動）
-3. ✅ Dev Store準備（crypfy-dev.myshopify.com - Plus相当）
-4. ✅ Bogus Gateway有効化
+### 🎯 Phase 1: UXフロー最速構築（中身空でOK） - **今日やる**
 
-### Phase 2: Webhook実装 🔥 (優先度: 最高)
+**目的**: 「決済→Webhook→メール→リンク→Wallet画面」全体導線を稼働確認
+
+**完了条件**:
+- ✅ Dev StoreでBogus購入
+- ✅ orders/paid がCloud Runに届く
+- ✅ 別メールが受信できる
+- ✅ メールのリンクを踏むとNextのWallet画面が開く
+- ✅ デモで一連を見せられる状態
+
+**タスク（順不同OK）**:
+1. ⏳ **CI/CD最優先**: Remix/Next それぞれ GitHub Actions → Cloud Run自動デプロイ線を通す
+   ```bash
+   # Remix → crypify-webhook.run.app
+   # Next → wallet.crypify.dev
+   ```
+
+2. ⏳ **orders/paid Webhook空実装** (`/app/routes/api.webhooks.orders_paid.tsx`)
+   ```typescript
+   export async function action({ request }: ActionFunctionArgs) {
+     // 最小HMAC検証（形だけ）
+     const hmac = request.headers.get('X-Shopify-Hmac-Sha256');
+     // 200返す
+     return new Response('OK', { status: 200 });
+   }
+   ```
+
+3. ⏳ **固定文面メール送信** (Remix側 - Nodemailer)
+   ```typescript
+   // 件名: 🎉 Crypto Walletをプレゼント！
+   // リンク: https://wallet.crypify.dev/start（固定）
+   ```
+
+4. ⏳ **Next Wallet空UI** (`/app/start/page.tsx`)
+   ```typescript
+   // 「Wallet起動しました」ダミー画面のみ
+   // デプロイ確認が目的
+   ```
+
+5. ⏳ **1連フロー録画** (Bogus購入→メール→リンク→画面)
+
+### 🔥 Phase 2: CDP本実装差し替え
 5. ⏳ Order Created Webhook登録
    - Shopify Admin で Webhook URL設定: `https://your-tunnel.trycloudflare.com/api/webhooks/order_created`
    - Topic: `orders/create`
