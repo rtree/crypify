@@ -1,0 +1,333 @@
+/* --- Global Styles & Variables --- */
+:root {
+    --font-serif: 'Lora', serif;
+    --font-sans: 'Inter', sans-serif;
+    --color-background: #F4F1ED;
+    --color-text: #333333;
+    --color-primary: #8C6E54;
+    --color-dark-bg: #1A1A1A;
+    --color-white: #FFFFFF;
+    --color-border: #D9D9D9;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.6;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+a {
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+/* --- Typography --- */
+h1, h2, h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+}
+
+h1 {
+    font-size: 4rem;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+/* --- Header --- */
+.announcement-bar {
+    background-color: var(--color-dark-bg);
+    color: var(--color-white);
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.main-header {
+    background-color: var(--color-background);
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 95%;
+    margin: 0 auto;
+}
+
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.header-center .logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-center .logo-img {
+    height: 60px; /* Adjust as needed */
+}
+
+.header-center .logo-text {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.header-left i, .header-right i {
+    width: 24px;
+    height: 24px;
+    stroke-width: 1.5;
+}
+
+/* --- Key Visual --- */
+.key-visual img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* --- Featured Product Section --- */
+.featured-product {
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.featured-product .section-title {
+    margin-bottom: 3rem;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    text-align: left;
+}
+
+.product-details .price {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.product-details .description {
+    margin-bottom: 2rem;
+    color: #555;
+}
+
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background-color: transparent;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-family: inherit;
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-primary:hover {
+    background-color: #7a5f48;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--color-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-background);
+    border-color: #7a5f48;
+    color: #7a5f48;
+}
+
+.product-links {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+}
+
+.product-links a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.product-links i {
+    width: 16px;
+    height: 16px;
+}
+
+/* --- Collection Banner --- */
+.collection-banner {
+    background-color: var(--color-background);
+    background-image: url('img/banner.png');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    text-align: center;
+    padding: 12rem 0;
+}
+
+.collection-banner h2 {
+    font-family: var(--font-serif);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+/* --- Testimonials Section --- */
+.testimonials {
+    background-color: var(--color-dark-bg);
+    color: var(--color-white);
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.testimonials .small-title {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+}
+
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+    margin-top: 3rem;
+}
+
+.testimonial-item p {
+    color: #ccc;
+}
+
+/* --- Email Subscribe --- */
+.email-subscribe {
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.subscribe-form {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid var(--color-border);
+}
+
+.subscribe-form input {
+    flex-grow: 1;
+    border: none;
+    padding: 1rem;
+    font-size: 1rem;
+    background-color: transparent;
+}
+
+.subscribe-form input:focus {
+    outline: none;
+}
+
+.subscribe-form button {
+    background: none;
+    border: none;
+    padding: 0 1.5rem;
+    cursor: pointer;
+}
+
+/* --- Footer --- */
+.main-footer {
+    padding: 2rem 0;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.main-footer .payment-methods {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.payment-methods {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.payment-methods img {
+    height: 32px;
+    margin: 0 0.5rem;
+}
+
+.main-footer p {
+    margin-top: 1rem;
+    color: #999;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2.5rem;
+    }
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+    .testimonials-grid {
+        grid-template-columns: 1fr;
+    }
+    .header-container {
+        width: 90%;
+    }
+    .header-center .logo-text {
+        display: none; /* Hide text on small screens */
+    }
+}

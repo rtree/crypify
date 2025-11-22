@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Bag - Crypify</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="bag.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body>
+
+    <div class="announcement-bar">
+        <p>Free shipping on orders over $100</p>
+    </div>
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="header-left">
+                <a href="index.html" aria-label="Back to shop"><i data-feather="arrow-left"></i></a>
+            </div>
+            <div class="header-center">
+                <a href="index.html" class="logo-link">
+                    <img src="img/logo3.png" alt="Crypify Logo" class="logo-img">
+                </a>
+            </div>
+            <div class="header-right">
+                <a href="#" aria-label="Search"><i data-feather="search"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <main class="bag-main">
+        <div class="container">
+            <h1 class="bag-title">Shopping Bag</h1>
+            <div class="bag-grid">
+                <div class="bag-items">
+                    <div class="bag-item">
+                        <div class="item-image">
+                            <img src="img/sac.png" alt="Genuine Leather Backpack">
+                        </div>
+                        <div class="item-details">
+                            <p class="item-name">Genuine Leather Backpack</p>
+                            <p class="item-price">$5,000.00</p>
+                        </div>
+                        <div class="item-quantity">
+                            <input type="number" value="1" min="1">
+                        </div>
+                        <div class="item-total">
+                            <p>$5,000.00</p>
+                        </div>
+                        <div class="item-remove">
+                            <button aria-label="Remove item"><i data-feather="x"></i></button>
+                        </div>
+                    </div>
+                    <!-- More items can be added here -->
+                </div>
+
+                <div class="bag-summary">
+                    <h2>Order summary</h2>
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>$5,000.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Shipping</span>
+                        <span>Calculated at next step</span>
+                    </div>
+                    <div class="summary-total">
+                        <span>Total</span>
+                        <span>$5,000.00 USD</span>
+                    </div>
+                    <p class="summary-note">Taxes and shipping calculated at checkout</p>
+                    <button class="btn btn-primary btn-checkout">Proceed to Checkout</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="payment-methods">
+                <img src="img/card.png" alt="Card">
+            </div>
+            <p>&copy; 2025, Crypify</p>
+        </div>
+    </footer>
+
+    <script>
+        feather.replace();
+    </script>
+
+</body>
+</html>
