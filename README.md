@@ -83,25 +83,73 @@ API_BASE_URL=http://localhost:8080
 
 ## Deployment to Cloud Run
 
-### Deploy API first
+Deployment is automated via GitHub Actions when you push to the `main` branch.
+
+### Prerequisites
+
+1. Create Google Cloud project and enable Cloud Run, Artifact Registry
+2. Create service account with necessary permissions
+3. Add GitHub secrets:
+   - `GCP_PROJECT_ID`: Your Google Cloud project ID
+   - `GCP_SA_KEY`: Service account JSON key
+   
+4. Add Google Secret Manager secrets:
+   - `CDP_API_KEY`: Coinbase Developer Platform API key
+   - `CDP_API_SECRET`: Coinbase Developer Platform API secret
+   - `SMTP_HOST`: SMTP server host (e.g., smtp.gmail.com)
+   - `SMTP_PORT`: SMTP server port (e.g., 587)
+   - `SMTP_USER`: SMTP username
+   - `SMTP_PASS`: SMTP password
+   - `FROM_EMAIL`: From email address
+   - `FRONTEND_URL`: Frontend URL (set after web deployment)
+   - `API_BASE_URL`: API URL (set after api deployment)
+
+### Deploy API
 
 ```bash
-export CDP_API_KEY="your_api_key"
-export CDP_API_SECRET="your_api_secret"
-export SMTP_USER="your_email@gmail.com"
-export SMTP_PASS="your_app_password"
-
-chmod +x deploy-api.sh
-./deploy-api.sh
+git add .
+git commit -m "Deploy API"
+git push origin main
 ```
+
+This triggers `.github/workflows/deploy-remix-webhook.yml` which:
+1. Builds Docker image for `api/`
+2. Pushes to Artifact Registry
+3. Deploys to Cloud Run (asia-northeast1)
 
 ### Deploy Web
 
-Update `API_BASE_URL` in `deploy-web.sh` with your API Cloud Run URL, then:
+After API is deployed, update `API_BASE_URL` secret with the API Cloud Run URL, then:
 
 ```bash
-chmod +x deploy-web.sh
-./deploy-web.sh
+git add .
+git commit -m "Deploy Web"
+git push origin main
+```
+
+This triggers `.github/workflows/deploy-next-wallet.yml` which:
+1. Builds Docker image for `web/`
+2. Pushes to Artifact Registry
+3. Deploys to Cloud Run (asia-northeast1)
+
+### Manual Deploy (alternative)
+
+If you prefer manual deployment:
+
+```bash
+# API
+cd api
+gcloud run deploy crypify-api \
+  --source . \
+  --region asia-northeast1 \
+  --allow-unauthenticated
+
+# Web
+cd web
+gcloud run deploy crypify-web \
+  --source . \
+  --region asia-northeast1 \
+  --allow-unauthenticated
 ```
 
 ## Flow
