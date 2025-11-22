@@ -1,27 +1,14 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 
-const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@crypify.app";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
-if (!SMTP_USER || !SMTP_PASS) {
-  console.warn("⚠️  SMTP credentials not set. Emails will be logged only.");
+if (!SENDGRID_API_KEY) {
+  console.warn("⚠️  SENDGRID_API_KEY not set. Emails will be logged only.");
+} else {
+  sgMail.setApiKey(SENDGRID_API_KEY);
 }
-
-const transporter = SMTP_USER && SMTP_PASS 
-  ? nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: false,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
-    })
-  : null;
 
 interface PaymentEmailData {
   to: string;
@@ -111,15 +98,20 @@ View your wallet: ${walletUrl}
 Powered by Crypify
   `;
 
-  if (transporter) {
-    await transporter.sendMail({
-      from: FROM_EMAIL,
-      to: data.to,
-      subject: `✅ Payment Confirmed - ${data.purchaseId}`,
-      text: textContent,
-      html: htmlContent,
-    });
-    console.log(`📧 Email sent to ${data.to}`);
+  if (SENDGRID_API_KEY) {
+    try {
+      await sgMail.send({
+        from: FROM_EMAIL,
+        to: data.to,
+        subject: `✅ Payment Confirmed - ${data.purchaseId}`,
+        text: textContent,
+        html: htmlContent,
+      });
+      console.log(`📧 Email sent to ${data.to} via SendGrid`);
+    } catch (error) {
+      console.error(`❌ SendGrid error:`, error);
+      throw error;
+    }
   } else {
     console.log(`📧 [MOCK] Email to ${data.to}:`);
     console.log(textContent);

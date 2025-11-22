@@ -79,10 +79,7 @@ jobs:
             --set-env-vars NODE_ENV=production \
             --update-secrets CDP_API_KEY=CDP_API_KEY:latest \
             --update-secrets CDP_API_SECRET=CDP_API_SECRET:latest \
-            --update-secrets SMTP_HOST=SMTP_HOST:latest \
-            --update-secrets SMTP_PORT=SMTP_PORT:latest \
-            --update-secrets SMTP_USER=SMTP_USER:latest \
-            --update-secrets SMTP_PASS=SMTP_PASS:latest \
+            --update-secrets SENDGRID_API_KEY=SENDGRID_API_KEY:latest \
             --update-secrets FROM_EMAIL=FROM_EMAIL:latest \
             --update-secrets FRONTEND_URL=FRONTEND_URL:latest
       
