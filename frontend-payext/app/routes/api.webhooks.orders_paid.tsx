@@ -1,5 +1,5 @@
-import { ActionFunctionArgs, json } from "@remix-run/node";
-import crypto from "crypto";
+import type { ActionFunctionArgs } from "react-router";
+import { data } from "react-router";
 
 /**
  * Shopify orders/paid Webhook Handler
@@ -25,7 +25,7 @@ export async function action({ request }: ActionFunctionArgs) {
   // Phase 1: 簡易HMAC検証（形だけ）
   if (!hmac) {
     console.warn("[Webhook] Missing HMAC header");
-    return json({ error: "Missing HMAC" }, { status: 401 });
+    return data({ error: "Missing HMAC" }, { status: 401 });
   }
 
   // Phase 2で実装予定: 厳密なHMAC検証
@@ -35,7 +35,7 @@ export async function action({ request }: ActionFunctionArgs) {
   //   .update(rawBody)
   //   .digest("base64");
   // if (hmac !== calculatedHmac) {
-  //   return json({ error: "Invalid HMAC" }, { status: 401 });
+  //   return data({ error: "Invalid HMAC" }, { status: 401 });
   // }
 
   // Phase 1: ペイロードをパース（ログ出力のみ）
@@ -55,7 +55,7 @@ export async function action({ request }: ActionFunctionArgs) {
     // 3. メール送信（Nodemailer）
 
     // Phase 1: 200 OK返すだけ
-    return json(
+    return data(
       { 
         success: true, 
         message: "Webhook received (Phase 1 - stub implementation)" 
@@ -64,11 +64,11 @@ export async function action({ request }: ActionFunctionArgs) {
     );
   } catch (error) {
     console.error("[Webhook] Parse error:", error);
-    return json({ error: "Invalid JSON" }, { status: 400 });
+    return data({ error: "Invalid JSON" }, { status: 400 });
   }
 }
 
 // GETリクエストは拒否
 export async function loader() {
-  return json({ error: "Method not allowed" }, { status: 405 });
+  return data({ error: "Method not allowed" }, { status: 405 });
 }

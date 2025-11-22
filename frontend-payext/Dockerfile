@@ -14,14 +14,17 @@ ENV NODE_ENV=production
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
 
-# Install dependencies with pnpm
-RUN pnpm install --frozen-lockfile --prod
+# Install ALL dependencies (needed for build)
+RUN pnpm install --frozen-lockfile
 
 # Copy application code
 COPY . .
 
 # Build the application
 RUN pnpm run build
+
+# Remove devDependencies after build
+RUN pnpm prune --prod
 
 # Start the application
 CMD ["pnpm", "run", "docker-start"]
