@@ -63,20 +63,20 @@ jobs:
           echo "Pushing latest tag..."
           docker push $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
       
-      - name: Deploy to Cloud Run
+      - name: Deploy to Cloud Run (Initial)
         run: |
           gcloud run deploy $SERVICE_NAME \
             --image $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }} \
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
-            --min-instances 1 \
+            --min-instances 0 \
             --max-instances 10 \
             --memory 512Mi \
             --cpu 1 \
             --concurrency 5 \
             --timeout 60s \
-            --set-env-vars "NODE_ENV=production" \
+            --set-env-vars "NODE_ENV=production,SHOPIFY_APP_URL=https://placeholder.com,SCOPES=write_orders,read_customers" \
             --update-secrets "SHOPIFY_API_KEY=SHOPIFY_API_KEY:latest" \
             --update-secrets "SHOPIFY_API_SECRET=SHOPIFY_API_SECRET:latest" \
             --update-secrets "CDP_API_KEY=CDP_API_KEY:latest" \
@@ -91,6 +91,12 @@ jobs:
             --format 'value(status.url)')
           echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
           echo "🚀 Deployed to: $SERVICE_URL"
+      
+      - name: Update SHOPIFY_APP_URL with actual URL
+        run: |
+          gcloud run services update $SERVICE_NAME \
+            --region $REGION \
+            --update-env-vars "SHOPIFY_APP_URL=${{ steps.get-url.outputs.service_url }}"
       
       - name: Output deployment info
         run: |
