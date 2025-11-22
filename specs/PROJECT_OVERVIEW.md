@@ -1,7 +1,12 @@
 # crypify - プロジェクト全体構造ドキュメント
 
 **作成日**: 2025-11-21  
-**プロジェクト種別**: Shopify Payment Extension (Alternative Payment)
+**最終更新**: 2025-11-22  
+**プロジェクト種別**: Shopify Offsite Payment Extension + Checkout UI Extension
+
+**戦略**: 
+- ✅ **ハッカソン期間中**: Offsite Payment Extension（Beta access不要、即座実装可能）
+- 🎯 **ハッカソン後**: Alternative Payment Extension移行（Payments Partner承認後）
 
 ---
 
@@ -140,35 +145,47 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 1. ✅ Shopify App作成 (`pnpm create @shopify/app@latest`)
 2. ✅ 開発環境セットアップ（環境変数、Supabase接続）
 3. ✅ Payment Extension手動作成（CLIでは生成不可のため）
+4. ✅ Offsite Payment Extension設定 (`target = "payments.offsite.render"`)
 
 ### Phase 2: Backend API実装 ✅
-4. ✅ Payment Session Handler (`/api/payment_session`)
-5. ⏳ Payment Resolve API (`/api/payment/resolve`) - 次のステップ
-6. ✅ Refund Session Handler (`/api/refund_session`)
-7. ✅ Confirmation Callback Handler (`/api/confirmation_callback`)
-8. ✅ Capture Session Handler (`/api/capture_session`) - オプション
-9. ✅ Void Session Handler (`/api/void_session`) - オプション
-10. ✅ Prisma Schema拡張（PaymentSession, RefundSession, CaptureSession, VoidSession）
+5. ✅ Payment Session Handler (`/api/payment_session`)
+6. ⏳ Payment Resolve API (`/api/payment/resolve`) - 次のステップ
+7. ✅ Refund Session Handler (`/api/refund_session`)
+8. ✅ Confirmation Callback Handler (`/api/confirmation_callback`)
+9. ✅ Capture Session Handler (`/api/capture_session`) - オプション
+10. ✅ Void Session Handler (`/api/void_session`) - オプション
+11. ✅ Prisma Schema拡張（PaymentSession, RefundSession, CaptureSession, VoidSession）
 
-### Phase 3: Frontend実装
-8. Checkout UI Extension（ロゴ・説明文のみ）
-9. Payment Page (`/app/pay/:paymentId`)
-   - OnchainKit統合
-   - Wallet接続フロー
-   - Onrampフロー
-   - Transaction送信
+### Phase 3: Frontend実装（ハッカソン向けOffsite方式）
+12. ✅ Checkout UI Extension生成
+13. ⏳ Payment Page (`/app/pay/:paymentId`) - Offsite決済ページ
+    - OnchainKit統合
+    - Wallet接続フロー
+    - Onrampフロー
+    - Transaction送信
+    - Shopifyへのリダイレクトバック
 
 ### Phase 4: CDP統合
-10. Server Wallets v2 セットアップ
-11. Embedded Wallets 統合
-12. Onramp API設定
-13. Gas Sponsorship有効化（推奨）
+14. ⏳ Server Wallets v2 セットアップ
+15. ⏳ Embedded Wallets 統合
+16. ⏳ Onramp API設定
+17. ⏳ Gas Sponsorship有効化（推奨）
 
-### Phase 5: テスト & デプロイ
-14. Base Sepolia (Testnet) でE2Eテスト
-15. GCP Cloud Run デプロイ
-16. Shopify Dev Store統合テスト
-17. Base Mainnet移行
+### Phase 5: テスト & デプロイ（ハッカソン期間中）
+18. ⏳ Base Sepolia (Testnet) でE2Eテスト
+19. ⏳ GCP Cloud Run デプロイ
+20. ⏳ Shopify Dev Store統合テスト
+21. ⏳ Base Mainnet移行
+22. ⏳ ハッカソンデモ準備
+
+### Phase 6: Alternative Payment移行（ハッカソン後） 🎯
+23. ⏳ Payments Partner申請
+24. ⏳ Beta access承認待ち
+25. ⏳ `shopify.extension.toml` 更新 (`target = "payments.custom-onsite.render"`)
+26. ⏳ UI Extension Handleの統合（Checkout UI Extensionと連携）
+27. ⏳ Dev Storeでテスト（Development状態）
+28. ⏳ App Review提出
+29. ⏳ 本番公開（Hidden → Generally Available）
 
 ---
 
@@ -181,39 +198,69 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 - ❌ CLI template一覧にPayments Extensionが存在しない
 - ✅ 手動で `extensions/crypify-payment/` ディレクトリを作成
 - ✅ `shopify.extension.toml` を手動で記述
-- ✅ ソースコード調査により `payments.custom-onsite.render` ターゲットを確認
+- ✅ 最初の実装ターゲット: `payments.offsite.render` (Offsite Payment Extension)
 
-### 2. なぜ Payment Extension (Alternative Payment) か？
+**Alternative Payment Extension (`payments.custom-onsite.render`) について**:
+- ⚠️ **招待制 (invite-only closed beta)** - Shopify公式により明記
+- ⚠️ **Payments Partner承認が前提** - 審査期間は不確定（数週間〜数ヶ月）
+- ⚠️ ハッカソン期間中の承認取得は**現実的に困難**
+- 💡 Offsite Extensionで実装後、承認取得次第Alternativeへ移行可能
 
-**比較: Theme App Extension (従来型) vs Payment Extension**
+### 2. なぜ Offsite Payment Extension か？
 
-| 項目 | Theme App Extension | Payment Extension |
-|------|-------------------|-------------------|
-| **統合場所** | 商品ページ | チェックアウト画面 |
-| **UX** | 独自ボタン配置 | Shopify標準UI統合 |
-| **CVR** | 外部リダイレクトで低下 | 同一ドメイン内で維持 |
-| **信頼性** | カスタムUI | Shopify公式決済方法 |
-| **審査** | 本番リリース時必要 | Dev Storeは不要 |
+**比較: Theme App Extension vs Offsite Payment vs Alternative Payment**
 
-**結論**: Payment Extensionがハッカソン + 本番運用の両面で最適
+| 項目 | Theme App Extension | Offsite Payment Extension | Alternative Payment Extension |
+|------|-------------------|--------------------------|------------------------------|
+| **統合場所** | 商品ページ | チェックアウト画面 | チェックアウト画面 |
+| **UX** | 独自ボタン配置 | 外部ページへリダイレクト | Shopify内で完結（iframe等） |
+| **実装難易度** | 低 | 中 | 高 |
+| **Beta Access** | 不要 | **不要** ✅ | **必須** ⚠️ (招待制) |
+| **審査期間** | 本番時のみ | 本番時のみ | **招待待ち（不確定）** |
+| **ハッカソン適合性** | △ CVR低下 | **✅ 最適** | ❌ 期間内に間に合わない |
+| **本番移行** | 困難 | **✅ Alternativeへ移行可能** | ✅ 最終形態 |
 
-### 3. なぜ リダイレクト方式 か？
+**ハッカソン戦略**:
+1. ✅ **Phase 1 (ハッカソン中)**: Offsite Payment Extensionで完全動作デモ作成
+   - Beta access不要で即座に実装開始可能
+   - 外部リダイレクトでもShopify公式決済フローに統合
+   - 実際のUSDC転送を含む完全な決済体験を実装
 
-**制約**: Checkout UI ExtensionはWeb Worker環境
+2. 🎯 **Phase 2 (ハッカソン後)**: Payments Partner申請 & Alternative移行
+   - 既存のAPI実装をそのまま活用（`payment_session_url`等は共通）
+   - `shopify.extension.toml`の`target`を`payments.offsite.render` → `payments.custom-onsite.render`に変更
+   - UX向上（外部リダイレクト不要に）
+
+**結論**: Offsite → Alternative の段階的移行がリスク最小・価値最大
+
+### 3. なぜ リダイレクト方式 (Offsite) か？
+
+**Offsite Payment Extensionの仕組み**:
+1. Shopifyチェックアウトで「Crypto (USDC on Base)」を選択
+2. **Shopifyが自動的に外部決済ページへリダイレクト** (`payment_session_url`で指定)
+3. 外部ページ（Remix App）でCDP統合の決済処理
+4. 完了後、Shopifyへリダイレクトバック
+
+**技術的制約と解決策**:
 
 ```diff
-- Web Worker環境でできないこと:
+- Checkout UI Extension (Web Worker) の制約:
   ❌ DOM API (document, window)
   ❌ Coinbase Wallet SDK
   ❌ OnchainKit Components
   ❌ CDP Server Wallets SDK
   
-+ リダイレクト方式でできること:
-  ✅ Remix App内でフルスタックJavaScript
++ Offsite Payment Extension (外部ページ) の利点:
+  ✅ Remix App内でフルスタックJavaScript実行
   ✅ OnchainKit / wagmi / viem 使用可能
   ✅ CDP SDK フル機能利用
-  ✅ 同一ドメイン内でUX維持
+  ✅ React/Next.js等のモダンフレームワーク利用可能
+  ✅ Shopify公式決済フローに統合（非公式の外部リンクではない）
 ```
+
+**Alternative Paymentとの違い**:
+- Offsite: 外部ページで決済処理（`https://your-app.com/pay/123`）
+- Alternative: Shopify内でiframe/埋め込みで決済処理（UX最適だがBeta access必須）
 
 ### 4. なぜ Base Chain か？
 

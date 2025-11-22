@@ -147,11 +147,18 @@ frontend-payext/
 │       └── shopify.extension.toml  # 手動作成 ✅
 ```
 
-**設定内容**:
+**設定内容（ハッカソン向けOffsite方式）**:
 - `type: payments_extension`
-- `target: payments.custom-onsite.render`
-- `payment_session_url`, `refund_session_url` など5つのエンドポイント定義
-- `ui_extension_handle: crypify-checkout-ui` でCheckout UIと連携
+- `target: payments.offsite.render` ✅ (Beta access不要)
+- `payment_session_url`, `refund_session_url` など6つのエンドポイント定義
+- `supported_payment_methods: ["wallet"]` - Crypto/Wallet決済
+- `merchant_label`, `buyer_label` - チェックアウト画面表示名
+- `supported_countries` - 対応国リスト
+
+**ハッカソン後の移行計画** 🎯:
+- Payments Partner承認後、`target: payments.custom-onsite.render` へ変更
+- `ui_extension_handle: crypify-checkout-ui` でCheckout UIと連携（iframe統合）
+- その他のAPIエンドポイントは変更不要
 
 ### 2. Checkout UI Extension ✅
 ```bash

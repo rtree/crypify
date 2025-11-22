@@ -1,46 +1,48 @@
-import '@shopify/ui-extensions/preact';
-import {render} from "preact";
+import {
+  reactExtension,
+  Banner,
+  BlockStack,
+  Button,
+  Text,
+  useApi,
+} from '@shopify/ui-extensions-react/checkout';
 
-// 1. Export the extension
-export default async () => {
-  render(<Extension />, document.body)
-};
+// Crypify - Crypto Payment Button for Checkout
+export default reactExtension('purchase.checkout.block.render', () => <CrypifyPaymentButton />);
 
-function Extension() {
-  // 2. Check instructions for feature availability, see https://shopify.dev/docs/api/checkout-ui-extensions/apis/cart-instructions for details
-  if (!shopify.instructions.value.attributes.canUpdateAttributes) {
-    // For checkouts such as draft order invoices, cart attributes may not be allowed
-    // Consider rendering a fallback UI or nothing at all, if the feature is unavailable
-    return (
-      <s-banner heading="crypify-checkout-ui" tone="warning">
-        {shopify.i18n.translate("attributeChangesAreNotSupported")}
-      </s-banner>
-    );
-  }
+function CrypifyPaymentButton() {
+  const { extension, shop } = useApi();
 
-  // 3. Render a UI
+  const handleCryptoPayment = () => {
+    // For now, open payment page in new window
+    // In production, this should redirect properly within Shopify checkout flow
+    const appUrl = "https://moses-efficient-disabilities-governing.trycloudflare.com";
+    const paymentUrl = `${appUrl}/app/pay/demo-checkout-token`;
+    
+    console.log('[Crypify] Opening crypto payment:', paymentUrl);
+    
+    // Note: window.open may be blocked by popup blockers
+    // Alternative: use Shopify's redirect API when available
+    if (typeof window !== 'undefined') {
+      window.open(paymentUrl, '_blank');
+    }
+  };
+
   return (
-    <s-banner heading="crypify-checkout-ui">
-      <s-stack gap="base">
-        <s-text>
-          {shopify.i18n.translate("welcome", {
-            target: <s-text type="emphasis">{shopify.extension.target}</s-text>,
-          })}
-        </s-text>
-        <s-button onClick={handleClick}>
-          {shopify.i18n.translate("addAFreeGiftToMyOrder")}
-        </s-button>
-      </s-stack>
-    </s-banner>
+    <BlockStack spacing="base">
+      <Banner title="Pay with Crypto (USDC)" status="success">
+        <Text>
+          Pay using USDC on Base blockchain
+        </Text>
+      </Banner>
+      
+      <Button kind="primary" onPress={handleCryptoPayment}>
+        🪙 Pay with USDC on Base
+      </Button>
+      
+      <Text size="small" appearance="subdued">
+        Powered by Coinbase CDP • Instant settlement • Low fees ($0.01)
+      </Text>
+    </BlockStack>
   );
-
-  async function handleClick() {
-    // 4. Call the API to modify checkout
-    const result = await shopify.applyAttributeChange({
-      key: "requestedFreeGift",
-      type: "updateAttribute",
-      value: "yes",
-    });
-    console.log("applyAttributeChange result", result);
-  }
 }
