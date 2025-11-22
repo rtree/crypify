@@ -3,7 +3,7 @@ name: Deploy Remix Webhook to Cloud Run
 on:
   push:
     branches:
-      - main
+      - DEPLOY-DISABLED  # Auto-deploy disabled
     paths:
       - 'frontend-payext/**'
       - '.github/workflows/deploy-remix-webhook.yml'
