@@ -3,7 +3,7 @@ name: Deploy Next.js Wallet UI to Cloud Run
 on:
   push:
     branches:
-      - main
+      - DEPLOY-DISABLED  # Auto-deploy disabled
     paths:
       - 'wallet-ui/**'
       - '.github/workflows/deploy-next-wallet.yml'
