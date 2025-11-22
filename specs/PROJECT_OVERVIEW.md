@@ -381,78 +381,7 @@
 
 ## 🔑 重要な設計判断
 
-### 1. Payment Extension の実装方法について ⚠️
-
-**重要な発見**: Shopify CLIの `shopify app generate extension` コマンドでは**Payment Extensionを自動生成できません**。
-
-- ❌ CLI template一覧にPayments Extensionが存在しない
-- ✅ 手動で `extensions/crypify-payment/` ディレクトリを作成
-- ✅ `shopify.extension.toml` を手動で記述
-- ✅ 最初の実装ターゲット: `payments.offsite.render` (Offsite Payment Extension)
-
-**Alternative Payment Extension (`payments.custom-onsite.render`) について**:
-- ⚠️ **招待制 (invite-only closed beta)** - Shopify公式により明記
-- ⚠️ **Payments Partner承認が前提** - 審査期間は不確定（数週間〜数ヶ月）
-- ⚠️ ハッカソン期間中の承認取得は**現実的に困難**
-- 💡 Offsite Extensionで実装後、承認取得次第Alternativeへ移行可能
-
-### 2. なぜ Offsite Payment Extension か？
-
-**比較: Theme App Extension vs Offsite Payment vs Alternative Payment**
-
-| 項目 | Theme App Extension | Offsite Payment Extension | Alternative Payment Extension |
-|------|-------------------|--------------------------|------------------------------|
-| **統合場所** | 商品ページ | チェックアウト画面 | チェックアウト画面 |
-| **UX** | 独自ボタン配置 | 外部ページへリダイレクト | Shopify内で完結（iframe等） |
-| **実装難易度** | 低 | 中 | 高 |
-| **Beta Access** | 不要 | **不要** ✅ | **必須** ⚠️ (招待制) |
-| **審査期間** | 本番時のみ | 本番時のみ | **招待待ち（不確定）** |
-| **ハッカソン適合性** | △ CVR低下 | **✅ 最適** | ❌ 期間内に間に合わない |
-| **本番移行** | 困難 | **✅ Alternativeへ移行可能** | ✅ 最終形態 |
-
-**ハッカソン戦略**:
-1. ✅ **Phase 1 (ハッカソン中)**: Offsite Payment Extensionで完全動作デモ作成
-   - Beta access不要で即座に実装開始可能
-   - 外部リダイレクトでもShopify公式決済フローに統合
-   - 実際のUSDC転送を含む完全な決済体験を実装
-
-2. 🎯 **Phase 2 (ハッカソン後)**: Payments Partner申請 & Alternative移行
-   - 既存のAPI実装をそのまま活用（`payment_session_url`等は共通）
-   - `shopify.extension.toml`の`target`を`payments.offsite.render` → `payments.custom-onsite.render`に変更
-   - UX向上（外部リダイレクト不要に）
-
-**結論**: Offsite → Alternative の段階的移行がリスク最小・価値最大
-
-### 3. なぜ リダイレクト方式 (Offsite) か？
-
-**Offsite Payment Extensionの仕組み**:
-1. Shopifyチェックアウトで「Crypto (USDC on Base)」を選択
-2. **Shopifyが自動的に外部決済ページへリダイレクト** (`payment_session_url`で指定)
-3. 外部ページ（Remix App）でCDP統合の決済処理
-4. 完了後、Shopifyへリダイレクトバック
-
-**技術的制約と解決策**:
-
-```diff
-- Checkout UI Extension (Web Worker) の制約:
-  ❌ DOM API (document, window)
-  ❌ Coinbase Wallet SDK
-  ❌ OnchainKit Components
-  ❌ CDP Server Wallets SDK
-  
-+ Offsite Payment Extension (外部ページ) の利点:
-  ✅ Remix App内でフルスタックJavaScript実行
-  ✅ OnchainKit / wagmi / viem 使用可能
-  ✅ CDP SDK フル機能利用
-  ✅ React/Next.js等のモダンフレームワーク利用可能
-  ✅ Shopify公式決済フローに統合（非公式の外部リンクではない）
-```
-
-**Alternative Paymentとの違い**:
-- Offsite: 外部ページで決済処理（`https://your-app.com/pay/123`）
-- Alternative: Shopify内でiframe/埋め込みで決済処理（UX最適だがBeta access必須）
-
-### 4. なぜ Base Chain か？
+### なぜ Base Chain か？
 
 | 項目 | Ethereum Mainnet | Base (Coinbase L2) |
 |------|------------------|-------------------|
@@ -462,10 +391,6 @@
 | **CDP統合** | 通常サポート | ネイティブ統合（Coinbase運営） |
 
 **結論**: マイクロペイメント対応 + UX最適化のためBase一択
-
----
-
-## CDP and pkg name
 
 ### crypify の対応
 
@@ -538,8 +463,6 @@ if (decoded.exp < Date.now() / 1000) throw new Error('Token expired');
 # 本番環境
 CDP_API_KEY=organizations/xxx/apiKeys/yyy (Secret Manager)
 CDP_PRIVATE_KEY=-----BEGIN EC PRIVATE KEY----- (Secret Manager)
-SUPABASE_URL=https://xxx.supabase.co (Cloud Run環境変数)
-SUPABASE_ANON_KEY=eyJhbG... (Secret Manager)
 SHOPIFY_API_SECRET_KEY=shpss_xxx (Secret Manager)
 ```
 
@@ -613,6 +536,7 @@ await order.save({ update: true });
 ### Phase 2: ハッカソン中盤 - Cloud Run移行 🔥
 
 **理由**: デモ詰みリスク回避、本番URLで安定稼働
+　＆ GithubActionsで配る
 
 #### Dockerfile作成
 ```dockerfile
@@ -658,24 +582,6 @@ gcloud run deploy crypify \
   --set-env-vars JWT_SECRET=xxx
 ```
 
-#### Shopify App URL更新
-```toml
-# shopify.app.toml
-application_url = "https://crypify-xxx.run.app"
-embedded = true
-
-[webhooks]
-api_version = "2025-01"
-
-[[webhooks.subscriptions]]
-topics = ["orders/create"]
-uri = "https://crypify-xxx.run.app/api/webhooks/order_created"
-```
-
-### Phase 3: 本番化（ハッカソン後）
-
-#### GCP Cloud Run 本番設定
-
 ```yaml
 service: crypify
 region: us-west1  # Supabaseと同一リージョン推奨
@@ -699,8 +605,6 @@ secrets:
   SHOPIFY_API_SECRET_KEY: latest
 ```
 
-### CI/CD Pipeline (ハッカソン後)
-
 ```yaml
 name: Deploy to Cloud Run
 on:
@@ -719,6 +623,21 @@ jobs:
             --region us-west1 \
             --min-instances 1 \
             --max-instances 10
+```
+
+
+#### Shopify App URL更新
+```toml
+# shopify.app.toml
+application_url = "https://crypify-xxx.run.app"
+embedded = true
+
+[webhooks]
+api_version = "2025-01"
+
+[[webhooks.subscriptions]]
+topics = ["orders/create"]
+uri = "https://crypify-xxx.run.app/api/webhooks/order_created"
 ```
 
 ---
