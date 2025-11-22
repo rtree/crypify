@@ -5,6 +5,7 @@ api_version = "2025-10"
 
 [[extensions]]
 name = "Crypify - Crypto Payments"
+uid = "f87876ac-a630-e7db-9ae5-6a0ec076d7ef67a78536"
 type = "payments_extension"
 handle = "crypify-payment"
 
@@ -20,9 +21,6 @@ buyer_label = "Pay with Crypto (USDC)"
 
 # Supported countries
 supported_countries = ["US", "JP", "GB", "CA", "AU", "BR", "MX", "DE", "FR"]
-
-# Payment methods - Cards for offsite support
-supported_payment_methods = ["visa", "mastercard", "american_express"]
 
 # Required capabilities
 supports_3ds = false
