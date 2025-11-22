@@ -23,8 +23,8 @@ COPY . .
 # Build the application
 RUN pnpm run build
 
-# Remove devDependencies after build
-RUN pnpm prune --prod
+# Remove devDependencies after build (set CI flag to avoid TTY error)
+RUN CI=true pnpm prune --prod
 
 # Start the application
 CMD ["pnpm", "run", "docker-start"]
