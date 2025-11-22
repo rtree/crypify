@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Trust Records</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #f7f8fa;
+            --card-bg-color: #ffffff;
+            --border-color: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-accent: #3b82f6;
+            --warning-bg: #fff1f2;
+            --warning-icon-color: #f43f5e;
+            --icon-color: #9ca3af;
+            --verified-color: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .trust-records-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .header .icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            background-color: var(--warning-bg);
+            border-radius: 50%;
+        }
+
+        .header .icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--warning-icon-color);
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .header p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .seller-summary {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .seller-summary .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border-color);
+        }
+        
+        .seller-summary .avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .seller-summary .info h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+        }
+
+        .seller-summary .info p {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+        
+        .seller-summary .info p .warning-icon {
+            color: var(--warning-icon-color);
+        }
+
+        .seller-summary .info .verified {
+            color: var(--verified-color);
+            font-weight: 500;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .category-tabs button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+        
+        .category-tabs button:hover {
+            background-color: #e5e7eb;
+        }
+
+        .category-tabs button.active {
+            background-color: var(--text-primary);
+            color: var(--card-bg-color);
+            border-color: var(--text-primary);
+        }
+        
+        .category-tabs button .count {
+            background-color: #e5e7eb;
+            color: var(--text-secondary);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+        }
+        
+        .category-tabs button.active .count {
+            background-color: #4b5563;
+            color: #e5e7eb;
+        }
+
+        .records-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .record-card {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            background-color: var(--card-bg-color);
+        }
+
+        .record-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .record-card .category {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .record-card .category .icon {
+            color: var(--text-primary);
+        }
+
+        .record-card .meta {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .record-card ul {
+            list-style-position: inside;
+            padding-left: 4px;
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .record-card li {
+            margin-bottom: 6px;
+        }
+        
+        .record-card li::marker {
+            color: var(--text-secondary);
+        }
+
+        .record-card .eas-link {
+            display: inline-block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-accent);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .record-card .eas-link:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="trust-records-container">
+    <div class="header">
+        <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+            </svg>
+        </div>
+        <div>
+            <h1>SELLER TRUST RECORDS</h1>
+            <p>(NEGATIVE HISTORY ONLY)</p>
+        </div>
+    </div>
+
+    <div class="seller-summary">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Man%20Technologist%20Light%20Skin%20Tone.png" alt="Seller Avatar" class="avatar">
+        <div class="info">
+            <h2>Seller: CryptoGearShop</h2>
+            <p>
+                <span class="warning-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+                Past Negative Issues: <strong>4</strong> On-Chain <span class="verified">Verified</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="category-tabs">
+        <button class="active" data-category="delivery">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.405 1.443L8 2.964l3.749 2.01L14.154 3.5zM1 4.697v7.104l5.803 3.203a.5.5 0 0 0 .394 0L13 11.797V4.697L8 7.434zM15 4.697v7.104l-2.218 1.226L8 10.062l-2.782 1.562L1 11.797V4.697L8 1.5z"/></svg>
+            Delivery Issue <span class="count">2</span>
+        </button>
+        <button data-category="product">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zM1 4v5h14V4zm14 6H1v2h14zM5 9.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5m2 0a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5"/></svg>
+            Product Value <span class="count">1</span>
+        </button>
+        <button data-category="communication">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1z"/></svg>
+            Communication <span class="count">1</span>
+        </button>
+    </div>
+
+    <div class="records-list">
+        <div class="record-card" data-category="delivery">
+            <div class="card-header">
+                <div class="category">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.405 1.443L8 2.964l3.749 2.01L14.154 3.5zM1 4.697v7.104l5.803 3.203a.5.5 0 0 0 .394 0L13 11.797V4.697L8 7.434zM15 4.697v7.104l-2.218 1.226L8 10.062l-2.782 1.562L1 11.797V4.697L8 1.5z"/></svg>
+                    </span>
+                    Delivery Issue
+                </div>
+                <a href="#" class="eas-link">EAS Record &gt;</a>
+            </div>
+            <p class="meta">October 11, 2024・0x47...a3D</p>
+            <ul>
+                <li>Item arrived 5 days late</li>
+                <li>No tracking number provided</li>
+            </ul>
+        </div>
+
+        <div class="record-card" data-category="delivery">
+            <div class="card-header">
+                <div class="category">
+                     <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.405 1.443L8 2.964l3.749 2.01L14.154 3.5zM1 4.697v7.104l5.803 3.203a.5.5 0 0 0 .394 0L13 11.797V4.697L8 7.434zM15 4.697v7.104l-2.218 1.226L8 10.062l-2.782 1.562L1 11.797V4.697L8 1.5z"/></svg>
+                    </span>
+                    Delivery Issue
+                </div>
+                <a href="#" class="eas-link">EAS Record &gt;</a>
+            </div>
+            <p class="meta">September 01, 2024・0x47...c1D</p>
+            <ul>
+                <li>Slow response to damage upon arrival</li>
+            </ul>
+        </div>
+        
+        <div class="record-card" data-category="product" style="display: none;">
+            <div class="card-header">
+                <div class="category">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zM1 4v5h14V4zm14 6H1v2h14zM5 9.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5m2 0a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5"/></svg>
+                    </span>
+                    Product Value
+                </div>
+                <a href="#" class="eas-link">EAS Record &gt;</a>
+            </div>
+            <p class="meta">July 22, 2024・0x8B...eF9</p>
+            <ul>
+                <li>Item was a different color than advertised</li>
+            </ul>
+        </div>
+
+        <div class="record-card" data-category="communication" style="display: none;">
+            <div class="card-header">
+                <div class="category">
+                    <span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1z"/></svg>
+                    </span>
+                    Communication
+                </div>
+                <a href="#" class="eas-link">EAS Record &gt;</a>
+            </div>
+            <p class="meta">June 05, 2024・0x1A...bC2</p>
+            <ul>
+                <li>Seller did not respond to inquiries for 3 days</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.category-tabs button');
+        const records = document.querySelectorAll('.record-card');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Deactivate all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Activate clicked tab
+                tab.classList.add('active');
+
+                const category = tab.dataset.category;
+
+                // Show/hide records based on category
+                records.forEach(record => {
+                    if (record.dataset.category === category) {
+                        record.style.display = 'block';
+                    } else {
+                        record.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
