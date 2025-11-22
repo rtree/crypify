@@ -1,74 +1,63 @@
 import type { ActionFunctionArgs } from "react-router";
-import { data } from "react-router";
+import { authenticate } from "../shopify.server";
 
 /**
  * Shopify orders/paid Webhook Handler
- * Phase 1: 空実装 - 200返すだけ（HMAC検証は形だけ）
+ * Phase 1: 空実装 - 200返すだけ（HMAC検証は自動）
  * Phase 2: CDP Wallet作成 + メール送信実装
  */
 export async function action({ request }: ActionFunctionArgs) {
-  // HMAC検証（形だけ - Phase 1では詳細チェックなし）
-  const hmac = request.headers.get("X-Shopify-Hmac-Sha256");
-  const topic = request.headers.get("X-Shopify-Topic");
-  const shop = request.headers.get("X-Shopify-Shop-Domain");
+  // Shopify authenticate.webhook() が自動でHMAC検証
+  const { topic, shop, payload } = await authenticate.webhook(request);
 
   console.log("[Webhook] Received:", {
     topic,
     shop,
-    hmac: hmac ? "present" : "missing",
     timestamp: new Date().toISOString(),
   });
 
-  // リクエストボディを取得
-  const rawBody = await request.text();
-  
-  // Phase 1: 簡易HMAC検証（形だけ）
-  if (!hmac) {
-    console.warn("[Webhook] Missing HMAC header");
-    return data({ error: "Missing HMAC" }, { status: 401 });
-  }
+  // Phase 1: ペイロードをログ出力のみ
+  const order = payload as {
+    id: number;
+    email: string;
+    total_price: string;
+    currency: string;
+    financial_status: string;
+  };
 
-  // Phase 2で実装予定: 厳密なHMAC検証
-  // const apiSecret = process.env.SHOPIFY_API_SECRET;
-  // const calculatedHmac = crypto
-  //   .createHmac("sha256", apiSecret)
-  //   .update(rawBody)
-  //   .digest("base64");
-  // if (hmac !== calculatedHmac) {
-  //   return data({ error: "Invalid HMAC" }, { status: 401 });
-  // }
+  console.log("[Webhook] Order received:", {
+    id: order.id,
+    email: order.email,
+    total_price: order.total_price,
+    currency: order.currency,
+    financial_status: order.financial_status,
+  });
 
-  // Phase 1: ペイロードをパース（ログ出力のみ）
-  try {
-    const order = JSON.parse(rawBody);
-    console.log("[Webhook] Order received:", {
-      id: order.id,
-      email: order.email,
-      total_price: order.total_price,
-      currency: order.currency,
-      financial_status: order.financial_status,
-    });
+  // Phase 2で実装予定:
+  // 1. CDP Wallet作成
+  // 2. Order Metafieldsにウォレット情報保存
+  // 3. メール送信（Nodemailer）
 
-    // Phase 2で実装予定:
-    // 1. CDP Wallet作成
-    // 2. Order Metafieldsにウォレット情報保存
-    // 3. メール送信（Nodemailer）
-
-    // Phase 1: 200 OK返すだけ
-    return data(
-      { 
-        success: true, 
-        message: "Webhook received (Phase 1 - stub implementation)" 
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("[Webhook] Parse error:", error);
-    return data({ error: "Invalid JSON" }, { status: 400 });
-  }
+  // Phase 1: 200 OK返すだけ
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      message: "Webhook received (Phase 1 - stub implementation)" 
+    }),
+    { 
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    }
+  );
 }
 
 // GETリクエストは拒否
 export async function loader() {
-  return data({ error: "Method not allowed" }, { status: 405 });
+  return new Response(
+    JSON.stringify({ error: "Method not allowed" }),
+    { 
+      status: 405,
+      headers: { "Content-Type": "application/json" }
+    }
+  );
 }
