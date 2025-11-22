@@ -14,3 +14,4 @@
 ✅ Coinbase Onramp (カード→USDC変換)  
 ✅ Base Chain (L2)での高速・低コスト決済  
 ✅ 自動注文作成 & 在庫管理連携  
+
