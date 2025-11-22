@@ -1,15 +1,20 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
+<body>
+
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seller Trust Records</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-        :root {
-            --bg-color: #f7f8fa;
-            --card-bg-color: #ffffff;
+        #crypify-reputation-widget {
+            /*
+              - 外側の背景を透明に設定し、Shopifyサイトの背景に馴染むようにしました。
+              - カードの背景色をベージュ系の #fdfdfa に変更しました。
+              - タブボタンの背景色を #f0f0e6 に調整しました。
+            */
+            --bg-color: #f0f0e6; /* Tab background */
+            --card-bg-color: #fdfdfa; /* Card background */
             --border-color: #e5e7eb;
             --text-primary: #111827;
             --text-secondary: #6b7280;
@@ -18,22 +23,19 @@
             --warning-icon-color: #f43f5e;
             --icon-color: #9ca3af;
             --verified-color: #10b981;
-        }
-
-        body {
+            
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
+            background-color: transparent; /* Changed from var(--bg-color) to transparent */
             color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            min-height: 100vh;
             padding: 2rem;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        .trust-records-container {
+        #crypify-reputation-widget .trust-records-container {
             width: 100%;
             max-width: 600px;
             background-color: var(--card-bg-color);
@@ -43,7 +45,7 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
-        .header {
+        #crypify-reputation-widget .header {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -52,7 +54,7 @@
             margin-bottom: 20px;
         }
 
-        .header .icon {
+        #crypify-reputation-widget .header .icon {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -62,25 +64,25 @@
             border-radius: 50%;
         }
 
-        .header .icon svg {
+        #crypify-reputation-widget .header .icon svg {
             width: 24px;
             height: 24px;
             color: var(--warning-icon-color);
         }
 
-        .header h1 {
+        #crypify-reputation-widget .header h1 {
             font-size: 1.25rem;
             font-weight: 600;
             margin: 0;
         }
 
-        .header p {
+        #crypify-reputation-widget .header p {
             font-size: 0.875rem;
             color: var(--text-secondary);
             margin: 0;
         }
 
-        .seller-summary {
+        #crypify-reputation-widget .seller-summary {
             display: flex;
             align-items: center;
             gap: 16px;
@@ -89,7 +91,7 @@
             margin-bottom: 20px;
         }
 
-        .seller-summary .avatar {
+        #crypify-reputation-widget .seller-summary .avatar {
             width: 48px;
             height: 48px;
             border-radius: 50%;
@@ -97,7 +99,7 @@
             border: 2px solid var(--border-color);
         }
         
-        .seller-summary .avatar-placeholder {
+        #crypify-reputation-widget .seller-summary .avatar-placeholder {
             width: 48px;
             height: 48px;
             border-radius: 50%;
@@ -107,13 +109,13 @@
             justify-content: center;
         }
 
-        .seller-summary .info h2 {
+        #crypify-reputation-widget .seller-summary .info h2 {
             font-size: 1.125rem;
             font-weight: 600;
             margin: 0 0 4px 0;
         }
 
-        .seller-summary .info p {
+        #crypify-reputation-widget .seller-summary .info p {
             display: flex;
             align-items: center;
             gap: 6px;
@@ -122,30 +124,30 @@
             margin: 0;
         }
         
-        .seller-summary .info p .warning-icon {
+        #crypify-reputation-widget .seller-summary .info p .warning-icon {
             color: var(--warning-icon-color);
         }
 
-        .seller-summary .info .verified {
+        #crypify-reputation-widget .seller-summary .info .verified {
             color: var(--verified-color);
             font-weight: 500;
         }
 
-        .category-tabs {
+        #crypify-reputation-widget .category-tabs {
             display: flex;
             gap: 8px;
             margin-bottom: 24px;
             flex-wrap: wrap;
         }
 
-        .category-tabs button {
+        #crypify-reputation-widget .category-tabs button {
             display: flex;
             align-items: center;
             gap: 6px;
             padding: 8px 16px;
             font-size: 0.875rem;
             font-weight: 500;
-            background-color: var(--bg-color);
+            background-color: #f0f0e6; /* Changed from var(--bg-color) */
             border: 1px solid var(--border-color);
             border-radius: 9999px;
             cursor: pointer;
@@ -153,17 +155,17 @@
             color: var(--text-secondary);
         }
         
-        .category-tabs button:hover {
+        #crypify-reputation-widget .category-tabs button:hover {
             background-color: #e5e7eb;
         }
 
-        .category-tabs button.active {
+        #crypify-reputation-widget .category-tabs button.active {
             background-color: var(--text-primary);
             color: var(--card-bg-color);
             border-color: var(--text-primary);
         }
         
-        .category-tabs button .count {
+        #crypify-reputation-widget .category-tabs button .count {
             background-color: #e5e7eb;
             color: var(--text-secondary);
             padding: 2px 6px;
@@ -171,32 +173,32 @@
             font-size: 0.75rem;
         }
         
-        .category-tabs button.active .count {
+        #crypify-reputation-widget .category-tabs button.active .count {
             background-color: #4b5563;
             color: #e5e7eb;
         }
 
-        .records-list {
+        #crypify-reputation-widget .records-list {
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .record-card {
+        #crypify-reputation-widget .record-card {
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 16px;
-            background-color: var(--card-bg-color);
+            background-color: #ffffff; /* Changed from var(--card-bg-color) */
         }
 
-        .record-card .card-header {
+        #crypify-reputation-widget .record-card .card-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 12px;
         }
 
-        .record-card .category {
+        #crypify-reputation-widget .record-card .category {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -204,17 +206,17 @@
             font-weight: 600;
         }
         
-        .record-card .category .icon {
+        #crypify-reputation-widget .record-card .category .icon {
             color: var(--text-primary);
         }
 
-        .record-card .meta {
+        #crypify-reputation-widget .record-card .meta {
             font-size: 0.875rem;
             color: var(--text-secondary);
             margin-bottom: 12px;
         }
 
-        .record-card ul {
+        #crypify-reputation-widget .record-card ul {
             list-style-position: inside;
             padding-left: 4px;
             margin: 0;
@@ -222,15 +224,15 @@
             color: var(--text-primary);
         }
 
-        .record-card li {
+        #crypify-reputation-widget .record-card li {
             margin-bottom: 6px;
         }
         
-        .record-card li::marker {
+        #crypify-reputation-widget .record-card li::marker {
             color: var(--text-secondary);
         }
 
-        .record-card .eas-link {
+        #crypify-reputation-widget .record-card .eas-link {
             display: inline-block;
             font-size: 0.875rem;
             font-weight: 500;
@@ -239,152 +241,157 @@
             transition: color 0.2s ease;
         }
         
-        .record-card .eas-link:hover {
+        #crypify-reputation-widget .record-card .eas-link:hover {
             color: #1d4ed8;
             text-decoration: underline;
         }
-
     </style>
-</head>
-<body>
 
-<div class="trust-records-container">
-    <div class="header">
-        <div class="icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
-            </svg>
-        </div>
-        <div>
-            <h1>SELLER TRUST RECORDS</h1>
-            <p>(NEGATIVE HISTORY ONLY)</p>
-        </div>
-    </div>
-
-    <div class="seller-summary">
-        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Man%20Technologist%20Light%20Skin%20Tone.png" alt="Seller Avatar" class="avatar">
-        <div class="info">
-            <h2>Seller: CryptoGearShop</h2>
-            <p>
-                <span class="warning-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-                    </svg>
-                </span>
-                Past Negative Issues: <strong>4</strong> On-Chain <span class="verified">Verified</span>
-            </p>
-        </div>
-    </div>
-
-    <div class="category-tabs">
-        <button class="active" data-category="delivery">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.405 1.443L8 2.964l3.749 2.01L14.154 3.5zM1 4.697v7.104l5.803 3.203a.5.5 0 0 0 .394 0L13 11.797V4.697L8 7.434zM15 4.697v7.104l-2.218 1.226L8 10.062l-2.782 1.562L1 11.797V4.697L8 1.5z"/></svg>
-            Delivery Issue <span class="count">2</span>
-        </button>
-        <button data-category="product">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zM1 4v5h14V4zm14 6H1v2h14zM5 9.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5m2 0a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5"/></svg>
-            Product Value <span class="count">1</span>
-        </button>
-        <button data-category="communication">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1z"/></svg>
-            Communication <span class="count">1</span>
-        </button>
-    </div>
-
-    <div class="records-list">
-        <div class="record-card" data-category="delivery">
-            <div class="card-header">
-                <div class="category">
-                    <span class="icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.405 1.443L8 2.964l3.749 2.01L14.154 3.5zM1 4.697v7.104l5.803 3.203a.5.5 0 0 0 .394 0L13 11.797V4.697L8 7.434zM15 4.697v7.104l-2.218 1.226L8 10.062l-2.782 1.562L1 11.797V4.697L8 1.5z"/></svg>
-                    </span>
-                    Delivery Issue
-                </div>
-                <a href="#" class="eas-link">EAS Record &gt;</a>
+<div id="crypify-reputation-widget">
+    <div class="trust-records-container">
+        <div class="header">
+            <div class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"></path>
+                </svg>
             </div>
-            <p class="meta">October 11, 2024・0x47...a3D</p>
-            <ul>
-                <li>Item arrived 5 days late</li>
-                <li>No tracking number provided</li>
-            </ul>
+            <div>
+                <h1>SELLER TRUST RECORDS</h1>
+                <p>(NEGATIVE HISTORY ONLY)</p>
+            </div>
         </div>
 
-        <div class="record-card" data-category="delivery">
-            <div class="card-header">
-                <div class="category">
-                     <span class="icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.405 1.443L8 2.964l3.749 2.01L14.154 3.5zM1 4.697v7.104l5.803 3.203a.5.5 0 0 0 .394 0L13 11.797V4.697L8 7.434zM15 4.697v7.104l-2.218 1.226L8 10.062l-2.782 1.562L1 11.797V4.697L8 1.5z"/></svg>
+        <div class="seller-summary">
+            <img src="https://api.dicebear.com/8.x/pixel-art/svg?seed=CryptoGearShop" alt="Seller Avatar" class="avatar">
+            <div class="info">
+                <h2>Seller: CryptoGearShop</h2>
+                <p>
+                    <span class="warning-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 20 20" fill="currentColor" width="16" height="16">
+                            <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                        </svg>
                     </span>
-                    Delivery Issue
-                </div>
-                <a href="#" class="eas-link">EAS Record &gt;</a>
+                    Past Negative Issues: <strong>4</strong> On-Chain <span class="verified">Verified</span>
+                </p>
             </div>
-            <p class="meta">September 01, 2024・0x47...c1D</p>
-            <ul>
-                <li>Slow response to damage upon arrival</li>
-            </ul>
-        </div>
-        
-        <div class="record-card" data-category="product" style="display: none;">
-            <div class="card-header">
-                <div class="category">
-                    <span class="icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zM1 4v5h14V4zm14 6H1v2h14zM5 9.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5m2 0a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5"/></svg>
-                    </span>
-                    Product Value
-                </div>
-                <a href="#" class="eas-link">EAS Record &gt;</a>
-            </div>
-            <p class="meta">July 22, 2024・0x8B...eF9</p>
-            <ul>
-                <li>Item was a different color than advertised</li>
-            </ul>
         </div>
 
-        <div class="record-card" data-category="communication" style="display: none;">
-            <div class="card-header">
-                <div class="category">
-                    <span class="icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1z"/></svg>
-                    </span>
-                    Communication
+        <div class="category-tabs">
+            <button class="active" data-category="delivery">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewbox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.405 1.443L8 2.964l3.749 2.01L14.154 3.5zM1 4.697v7.104l5.803 3.203a.5.5 0 0 0 .394 0L13 11.797V4.697L8 7.434zM15 4.697v7.104l-2.218 1.226L8 10.062l-2.782 1.562L1 11.797V4.697L8 1.5z"></path></svg>
+                Delivery Issue <span class="count">2</span>
+            </button>
+            <button data-category="product">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewbox="0 0 16 16"><path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zM1 4v5h14V4zm14 6H1v2h14zM5 9.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5m2 0a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5"></path></svg>
+                Product Value <span class="count">1</span>
+            </button>
+            <button data-category="communication">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewbox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1z"></path></svg>
+                Communication <span class="count">1</span>
+            </button>
+        </div>
+
+        <div class="records-list">
+            <div class="record-card" data-category="delivery">
+                <div class="card-header">
+                    <div class="category">
+                        <span class="icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewbox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.405 1.443L8 2.964l3.749 2.01L14.154 3.5zM1 4.697v7.104l5.803 3.203a.5.5 0 0 0 .394 0L13 11.797V4.697L8 7.434zM15 4.697v7.104l-2.218 1.226L8 10.062l-2.782 1.562L1 11.797V4.697L8 1.5z"></path></svg>
+                        </span>
+                        Delivery Issue
+                    </div>
+                    <a href="#" class="eas-link">EAS Record &gt;</a>
                 </div>
-                <a href="#" class="eas-link">EAS Record &gt;</a>
+                <p class="meta">October 11, 2024・0x47...a3D</p>
+                <ul>
+                    <li>Item arrived 5 days late</li>
+                    <li>No tracking number provided</li>
+                </ul>
             </div>
-            <p class="meta">June 05, 2024・0x1A...bC2</p>
-            <ul>
-                <li>Seller did not respond to inquiries for 3 days</li>
-            </ul>
+
+            <div class="record-card" data-category="delivery">
+                <div class="card-header">
+                    <div class="category">
+                         <span class="icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewbox="0 0 16 16"><path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.405 1.443L8 2.964l3.749 2.01L14.154 3.5zM1 4.697v7.104l5.803 3.203a.5.5 0 0 0 .394 0L13 11.797V4.697L8 7.434zM15 4.697v7.104l-2.218 1.226L8 10.062l-2.782 1.562L1 11.797V4.697L8 1.5z"></path></svg>
+                        </span>
+                        Delivery Issue
+                    </div>
+                    <a href="#" class="eas-link">EAS Record &gt;</a>
+                </div>
+                <p class="meta">September 01, 2024・0x47...c1D</p>
+                <ul>
+                    <li>Slow response to damage upon arrival</li>
+                </ul>
+            </div>
+            
+            <div class="record-card" data-category="product" style="display: none;">
+                <div class="card-header">
+                    <div class="category">
+                        <span class="icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewbox="0 0 16 16"><path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zM1 4v5h14V4zm14 6H1v2h14zM5 9.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5m2 0a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 .5.5"></path></svg>
+                        </span>
+                        Product Value
+                    </div>
+                    <a href="#" class="eas-link">EAS Record &gt;</a>
+                </div>
+                <p class="meta">July 22, 2024・0x8B...eF9</p>
+                <ul>
+                    <li>Item was a different color than advertised</li>
+                </ul>
+            </div>
+
+            <div class="record-card" data-category="communication" style="display: none;">
+                <div class="card-header">
+                    <div class="category">
+                        <span class="icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewbox="0 0 16 16"><path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1z"></path></svg>
+                        </span>
+                        Communication
+                    </div>
+                    <a href="#" class="eas-link">EAS Record &gt;</a>
+                </div>
+                <p class="meta">June 05, 2024・0x1A...bC2</p>
+                <ul>
+                    <li>Seller did not respond to inquiries for 3 days</li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tabs = document.querySelectorAll('.category-tabs button');
-        const records = document.querySelectorAll('.record-card');
+(function() {
+    // Ensure the script runs after the element is loaded, or wrap in a function to be called.
+    // This script targets elements within the '#crypify-reputation-widget'
+    const widget = document.querySelector('#crypify-reputation-widget');
+    if (!widget) {
+        // If the widget is not found, you can wait for DOMContentLoaded or just return.
+        // For Shopify themes, it's often better to place the script tag after the HTML.
+        return;
+    }
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Deactivate all tabs
-                tabs.forEach(t => t.classList.remove('active'));
-                // Activate clicked tab
-                tab.classList.add('active');
+    const tabs = widget.querySelectorAll('.category-tabs button');
+    const records = widget.querySelectorAll('.record-card');
 
-                const category = tab.dataset.category;
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
 
-                // Show/hide records based on category
-                records.forEach(record => {
-                    if (record.dataset.category === category) {
-                        record.style.display = 'block';
-                    } else {
-                        record.style.display = 'none';
-                    }
-                });
+            const category = tab.dataset.category;
+
+            records.forEach(record => {
+                if (record.dataset.category === category) {
+                    record.style.display = 'block';
+                } else {
+                    record.style.display = 'none';
+                }
             });
         });
     });
+})();
 </script>
 
+
 </body>
-</html>
