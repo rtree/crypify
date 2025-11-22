@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { pay } from "@/lib/api";
 
-export default function ThanksPage() {
+function ThanksContent() {
   const searchParams = useSearchParams();
   const purchaseId = searchParams.get("purchaseId");
   const email = searchParams.get("email");
@@ -133,5 +134,19 @@ export default function ThanksPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function ThanksPage() {
+  return (
+    <Suspense fallback={
+      <div className="container">
+        <div className="card">
+          <div className="loading">Loading...</div>
+        </div>
+      </div>
+    }>
+      <ThanksContent />
+    </Suspense>
   );
 }

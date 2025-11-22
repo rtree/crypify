@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { fetchWallet, WalletResponse } from "@/lib/api";
 
-export default function WalletPage() {
+function WalletContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -147,5 +147,19 @@ export default function WalletPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function WalletPage() {
+  return (
+    <Suspense fallback={
+      <div className="container">
+        <div className="card">
+          <div className="loading">Loading...</div>
+        </div>
+      </div>
+    }>
+      <WalletContent />
+    </Suspense>
   );
 }

@@ -169,8 +169,44 @@ gcloud run deploy crypify-web \
 - **Frontend**: Next.js 14, React, TypeScript
 - **Backend**: Node.js, Express, TypeScript
 - **Blockchain**: Coinbase Developer Platform (CDP), Base Sepolia
-- **Deployment**: Google Cloud Run
+- **Deployment**: Google Cloud Run, GitHub Actions
+- **Package Manager**: pnpm 9.0.0
 - **Email**: Nodemailer
+
+## Project Structure
+
+```
+crypify/
+├── .github/workflows/
+│   ├── deploy-web.yml      # Web deployment workflow
+│   └── deploy-api.yml      # API deployment workflow
+├── api/                     # Backend API
+│   ├── src/
+│   │   ├── routes/         # API routes (purchase, pay, wallet)
+│   │   ├── services/       # Business logic (CDP, email)
+│   │   ├── types.ts        # TypeScript types
+│   │   └── index.ts        # Express app
+│   ├── Dockerfile
+│   ├── package.json
+│   └── tsconfig.json
+├── web/                     # Frontend (Next.js)
+│   ├── app/
+│   │   ├── shop/           # Product selection
+│   │   ├── thanks/         # Payment execution
+│   │   ├── wallet/         # Wallet view
+│   │   └── layout.tsx
+│   ├── lib/api.ts          # API client
+│   ├── Dockerfile
+│   ├── package.json
+│   └── next.config.js
+├── specs/                   # Documentation
+│   ├── purchase.md         # /purchase endpoint spec
+│   ├── pay.md              # /pay endpoint spec
+│   └── wallet.md           # /wallet endpoint spec
+├── pnpm-workspace.yaml     # pnpm workspace config
+├── package.json            # Root package.json
+├── DEPLOYMENT.md           # Deployment guide
+└── README.md
 
 ## TODO for Production
 

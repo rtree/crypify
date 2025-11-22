@@ -82,4 +82,5 @@ export function markPurchaseAsPaid(purchaseId: string): void {
   }
 }
 
+export { router as purchaseRouter };
 export default router;

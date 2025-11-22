@@ -41,4 +41,5 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
+export { router as walletRouter };
 export default router;

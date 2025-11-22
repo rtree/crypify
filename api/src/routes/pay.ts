@@ -81,4 +81,5 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+export { router as payRouter };
 export default router;
