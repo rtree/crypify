@@ -43,9 +43,9 @@ jobs:
       
       - name: Build Docker image
         run: |
-          docker build -t $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }} \
+          docker build -f api/Dockerfile -t $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }} \
             -t $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
-            ./api
+            .
       
       - name: Push Docker image to Artifact Registry
         run: |

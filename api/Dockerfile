@@ -1,22 +1,27 @@
 # Build stage
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+WORKDIR /root/monorepo
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* tsconfig.json ./
+# Copy workspace config files
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Copy api package
+COPY api/package.json ./api/
+COPY api/tsconfig.json ./api/
 
-# Copy source code
-COPY src ./src
+# Install dependencies for entire workspace
+RUN pnpm install --frozen-lockfile --filter crypify-api...
 
-# Build TypeScript
-RUN pnpm run build
+# Copy api source
+COPY api/src ./api/src
+
+# Build
+WORKDIR /root/monorepo/api
+RUN pnpm build
 
 # Production stage
 FROM node:20-alpine
@@ -26,14 +31,18 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* ./
+# Copy only necessary files
+COPY --from=builder /root/monorepo/api/package.json ./
+COPY --from=builder /root/monorepo/api/dist ./dist
+COPY --from=builder /root/monorepo/pnpm-lock.yaml /root/monorepo/pnpm-workspace.yaml /root/monorepo/package.json /root/monorepo/
 
-# Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
+# Install production dependencies
+WORKDIR /root/monorepo
+RUN pnpm install --prod --frozen-lockfile --filter crypify-api...
 
-# Copy built code from builder
-COPY --from=builder /app/dist ./dist
+# Set working directory back to app
+WORKDIR /app
+RUN cp -r /root/monorepo/node_modules ./
 
 # Set environment
 ENV NODE_ENV=production
