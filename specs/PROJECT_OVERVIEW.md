@@ -1,111 +1,125 @@
 # crypify - プロジェクト全体構造ドキュメント
 
 **作成日**: 2025-11-21  
-**プロジェクト種別**: Shopify Payment Extension (Alternative Payment)
+**最終更新**: 2025-11-22  
+**Dev Store**: crypfy-dev.myshopify.com (Development Store - Plus相当)  
+**プロジェクト種別**: Shopify Webhook + CDP Embedded Wallets (Remix一本化、**DB無し**)
+
+**ハッカソン戦略（最小構成）**: 
+- 🎯 **Hackathon Goal**: Bogus決済 → Webhook → CDP Wallet自動発行 → USDC Reward → メール → Passkey認証
+- 🔥 **Early Deploy**: Cloudflare Tunnel → Cloud Run移行（ハッカソン中に本番URL化）
+- 🚀 **Post-Hackathon**: Base Mainnet移行、Offsite Payment Extension（Partner承認後）
 
 ---
 
 ## 📌 プロジェクト概要
 
 ### 目的
-ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）を統合し、Coinbase CDPを活用した次世代決済体験を提供する。
+**Shopifyで購入すると自動でCrypto Walletがもらえる、Web2→Web3オンボーディング体験**を提供。  
+購入額の10%をUSDC Rewardsとして還元し、次回購入や他のWeb3サービスで利用可能にする。
 
 ### 解決する課題
 | 課題 | 従来の問題 | crypify の解決策 |
 |------|-----------|----------------|
-| **Crypto普及の壁 (Buyer)** | ウォレット必須 → 普及率5%未満 | Onramp統合 → カードでUSDC購入可能（普及率95%） |
-| **Crypto普及の壁 (Seller)** | 複雑な統合 | Shopify公式チェックアウトに自動統合 |
-| **CVR低下** | 外部リダイレクト → CVR 30-40%低下 | 同一ドメイン内完結 → CVR維持 |
-| **高ガス代** | Ethereum Mainnet → $5-50 | Base L2 → $0.001-0.01 |
+| **Cryptoへの参入障壁** | ウォレット作成・秘密鍵管理が必要 | 購入だけで自動Wallet配布（Passkey認証） |
+| **Web3ロイヤルティの欠如** | ポイント＝中央集権的、他で使えない | USDC Rewards＝他サービス/DEXで自由に利用可能 |
+| **マーチャント側の複雑性** | Crypto決済統合が技術的に困難 | Shopify Webhookだけで完結 |
+| **高ガス代** | Ethereum Mainnet → $5-50 | Base L2 → $0.001-0.01（マイクロリワード可能） |
 
 ---
 
 ## 🏗️ システムアーキテクチャ
 
-### 全体フロー
+### ハッカソン版フロー（Bogus決済 + Wallet自動発行）
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │              Shopify Checkout (Standard UI)                 │
 │                                                             │
-│  支払い方法を選択:                                          │
-│  ○ クレジットカード                                         │
-│  ○ PayPal                                                   │
-│  ● Crypto (USDC on Base) ← crypify                         │
+│  支払い方法:                                                │
+│  ● Bogus Gateway (テスト決済)                              │
 │                                                             │
-│  [ Pay Now ] ボタンをクリック                               │
+│  カード番号: 1 (成功) / 2 (失敗) を入力                     │
+│  [ Complete Order ] ボタンをクリック                        │
 └─────────────────────────────────────────────────────────────┘
                           ↓
-                (Shopify が自動リダイレクト)
+                   (注文完了 Webhook)
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│         crypify Payment Page (Remix App)                    │
-│         URL: /app/pay/:paymentId                            │
+│         Shopify Order Created Webhook                       │
+│         → crypify Backend (Remix App)                       │
 │                                                             │
-│  ┌───────────────────────────────────────────────────┐     │
-│  │  Total: $20.00 USDC                               │     │
-│  │                                                   │     │
-│  │  [ Connect Wallet ] (OnchainKit)                  │     │
-│  │         OR                                        │     │
-│  │  [ Buy USDC with Card ] (Onramp)                  │     │
-│  └───────────────────────────────────────────────────┘     │
-│                                                             │
-│  1. ユーザーがウォレット接続 or Onramp実行                  │
-│  2. Base Chain (Chain ID: 8453) で USDC送金                │
-│  3. paymentSessionResolve() 呼び出し                        │
-│  4. 完了後、自動的にShopifyへリダイレクト                   │
+│  1. 顧客情報取得 (email, 購入額)                            │
+│  2. CDP Embedded Wallet 作成                                │
+│     - Passkey認証設定                                       │
+│     - ウォレットアドレス生成                                │
+│  3. 購入額の10%をUSDCでエアドロップ                         │
+│     - Base Sepoliaで実行 (テスト)                           │
+│  4. メール送信 (Shopify Email or SendGrid)                  │
+│     - 件名: "🎉 Crypto Walletをプレゼント！"                │
+│     - 本文: Walletアクセスリンク                            │
 └─────────────────────────────────────────────────────────────┘
                           ↓
-                 (決済完了通知 via Webhook)
+                  (顧客がメールを開く)
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│              Shopify (Order Confirmed)                      │
+│         Wallet Access Page (/wallet?token=xxx)              │
+│                                                             │
+│  1. 署名付きトークン検証（JWT/HMAC, 有効期限付き）           │
+│  2. Passkey認証 (Face ID / Touch ID)                        │
+│  3. Embedded Wallet表示 (OnchainKit)                        │
+│     - USDC残高表示                                          │
+│     - トランザクション履歴                                  │
+│  4. (将来) 次回購入時に使うボタン                           │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### コンポーネント構成
+### コンポーネント構成（ハッカソン最小版）
 
-#### 1. Shopify Payment Extension (Backend)
-- **役割**: 決済プロバイダーとしてShopifyに登録
-- **API**: 
-  - `payment_session_url`: 決済セッション作成
-  - `refund_session_url`: 返金処理
-  - `confirm_session_url`: 決済確認（オプション）
-- **技術**: Remix Actionハンドラー
+#### 1. Order Created Webhook Handler (Remix Action) 🔥
+- **役割**: Shopify購入完了時にCDP Wallet自動発行
+- **処理フロー**:
+  1. **HMAC署名検証**（Shopify公式ヘッダー `X-Shopify-Hmac-Sha256`）
+  2. **Idempotency確認**（Order Tagsで `crypify_rewarded` チェック）
+  3. **CDP Embedded Wallet作成**（@coinbase/coinbase-sdk）
+  4. **USDC Reward送金**（購入額10%、Base Sepolia）
+  5. **Order Metafields保存**（wallet_address, tx_hash, reward_amount）
+  6. **Order Tagに `crypify_rewarded` 追加**（冪等性確保）
+  7. **署名付きワンタイムトークン生成**（JWT）
+  8. **メール送信**（Shopify Email API）
+- **技術**: Remix + @coinbase/coinbase-sdk + Shopify Admin REST API
 
-#### 2. Checkout UI Extension (Frontend - Web Worker)
-- **役割**: チェックアウト画面にロゴ・説明文表示、リダイレクトボタン提供
-- **制約**: Web Worker環境のため、DOM API / CDP SDK 使用不可
-- **技術**: Preact (Shopify デフォルトレンダラー)
-
-#### 3. Payment Page (Remix App)
-- **役割**: Crypto決済の実行
+#### 2. Wallet Access Page (Remix Route)
+- **役割**: ユーザーがPasskeyでWalletにアクセス
+- **URL**: `/wallet?token=xxx` (JWT署名付き)
 - **機能**:
-  - OnchainKit Walletコンポーネント統合
-  - Onramp API による クレカ→USDC変換
-  - Base Chain トランザクション送信
-  - Supabase へのトランザクション記録
-- **技術**: React + OnchainKit + wagmi/viem
+  - トークン検証（有効期限、改ざんチェック）
+  - Passkey認証（@base-org/account）
+  - USDC残高表示（OnchainKit）
+  - トランザクション履歴（Base Sepolia Explorer）
+- **技術**: Remix + OnchainKit + @base-org/account
 
-#### 4. CDP Server Wallets (Backend)
-- **役割**: マーチャントのウォレット管理
-- **セキュリティ**: AWS Nitro Enclave TEE で秘密鍵管理
-- **技術**: `@coinbase/coinbase-sdk` v2 (v0.25.0)
+#### 3. Shopify Order Metafields (DB代わり) ✅
+- **役割**: Wallet情報の永続化（**外部DB不要**）
+- **保存データ**:
+  - Tag: `crypify_rewarded` (冪等性フラグ)
+  - Metafield: `crypify.wallet_address` (Text)
+  - Metafield: `crypify.reward_tx_hash` (Text)
+  - Metafield: `crypify.reward_amount` (Decimal)
+- **利点**:
+  - Cloud Runデプロイが超簡単（DATABASE_URL不要）
+  - 再起動・スケールで状態が消えない
+  - ハッカソンの試行錯誤スピード最大化
 
-#### 5. Supabase (Database)
-- **役割**: トランザクション履歴、決済セッション、返金記録
-- **接続モード**: Transaction Mode (Port 6543) + Prepared Statements無効化
-- **スキーマ**:
-  - `transactions`: 決済トランザクション
-  - `refunds`: 返金記録
-  - `payment_sessions`: キャッシュ用
+#### 4. CDP Embedded Wallets (Coinbase Infrastructure)
+- **役割**: ユーザーWallet管理（秘密鍵はCoinbase側で管理）
+- **認証**: Passkey（Face ID / Touch ID）
+- **Chain**: Base Sepolia (テスト) → Base Mainnet (本番)
 
-#### 6. GCP Cloud Run (Hosting)
-- **設定**:
-  - Min instances: 0 (コールドスタート)
-  - Max instances: 10 (Supabase接続プール連動)
-  - Memory: 512MB
-- **CI/CD**: GitHub Actions
+#### 5. GCP Cloud Run (Hosting - ハッカソン中に早期移行) 🔥
+- **戦略**: Cloudflare Tunnel → **早期にCloud Run移行**
+- **理由**: デモ詰みリスク回避、本番URLで安定稼働
+- **設定**: `min-instances=1` でコールドスタート回避、`concurrency=1-5` で安全性確保
 
 ---
 
@@ -123,8 +137,7 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 | `@coinbase/x402` | 0.7.1 | AI Agent決済 | 将来拡張用 |
 | `wagmi` | 2.19.5 | Web3 Hooks | viem統合 |
 | `viem` | 2.23.5 | EVM通信 | CDP v2互換 |
-| `@supabase/supabase-js` | 2.84.0 | DB Client | Transaction Mode |
-| `next` | 15.5.6 | React Framework | Shopify App内部 |
+| `jsonwebtoken` | latest | JWT署名 | ワンタイムトークン生成 |
 | `react` | 18.3.1 | UI Library | OnchainKit依存 |
 | `typescript` | 5.7.3 | Type Safety | strictモード |
 
@@ -134,41 +147,158 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 
 ---
 
-## 📋 実装ステップ
+## 📋 実装ステップ（ハッカソン最小構成）
 
-### Phase 1: プロジェクト初期化 ✅
+### Phase 1: 基盤構築 ✅
 1. ✅ Shopify App作成 (`pnpm create @shopify/app@latest`)
-2. ✅ 開発環境セットアップ（環境変数、Supabase接続）
-3. ✅ Payment Extension手動作成（CLIでは生成不可のため）
+2. ✅ 開発環境セットアップ（Cloudflare Tunnel起動）
+3. ✅ Dev Store準備（crypfy-dev.myshopify.com - Plus相当）
+4. ✅ Bogus Gateway有効化
 
-### Phase 2: Backend API実装 ✅
-4. ✅ Payment Session Handler (`/api/payment_session`)
-5. ⏳ Payment Resolve API (`/api/payment/resolve`) - 次のステップ
-6. ✅ Refund Session Handler (`/api/refund_session`)
-7. ✅ Confirmation Callback Handler (`/api/confirmation_callback`)
-8. ✅ Capture Session Handler (`/api/capture_session`) - オプション
-9. ✅ Void Session Handler (`/api/void_session`) - オプション
-10. ✅ Prisma Schema拡張（PaymentSession, RefundSession, CaptureSession, VoidSession）
+### Phase 2: Webhook実装 🔥 (優先度: 最高)
+5. ⏳ Order Created Webhook登録
+   - Shopify Admin で Webhook URL設定: `https://your-tunnel.trycloudflare.com/api/webhooks/order_created`
+   - Topic: `orders/create`
+6. ⏳ Webhook Handler骨組み (`/app/routes/api.webhooks.order_created.tsx`)
+   ```typescript
+   export async function action({ request }: ActionFunctionArgs) {
+     // 0) HMAC検証
+     const hmac = request.headers.get('X-Shopify-Hmac-Sha256');
+     const body = await request.text();
+     const calculatedHmac = crypto.createHmac('sha256', process.env.SHOPIFY_API_SECRET!)
+       .update(body).digest('base64');
+     if (hmac !== calculatedHmac) return new Response('Forbidden', { status: 403 });
 
-### Phase 3: Frontend実装
-8. Checkout UI Extension（ロゴ・説明文のみ）
-9. Payment Page (`/app/pay/:paymentId`)
-   - OnchainKit統合
-   - Wallet接続フロー
-   - Onrampフロー
-   - Transaction送信
+     const order = JSON.parse(body);
 
-### Phase 4: CDP統合
-10. Server Wallets v2 セットアップ
-11. Embedded Wallets 統合
-12. Onramp API設定
-13. Gas Sponsorship有効化（推奨）
+     // 1) すでに処理済みか？（Order Tags確認）
+     const { admin } = await shopify.authenticate.admin(request);
+     const existingOrder = await admin.rest.resources.Order.find({ 
+       session, 
+       id: order.id 
+     });
+     if (existingOrder.tags?.includes('crypify_rewarded')) {
+       return new Response('Already processed', { status: 200 });
+     }
 
-### Phase 5: テスト & デプロイ
-14. Base Sepolia (Testnet) でE2Eテスト
-15. GCP Cloud Run デプロイ
-16. Shopify Dev Store統合テスト
-17. Base Mainnet移行
+     // 2) CDP Wallet作成 & USDC Reward送金
+     const { walletAddress, txHash, rewardAmount } = await createWalletAndReward({
+       email: order.email,
+       totalPrice: order.total_price
+     });
+
+     // 3) Order Metafields & Tagに保存（DB代わり）
+     existingOrder.tags = `${existingOrder.tags}, crypify_rewarded`;
+     existingOrder.metafields = [
+       { namespace: 'crypify', key: 'wallet_address', type: 'single_line_text_field', value: walletAddress },
+       { namespace: 'crypify', key: 'reward_tx_hash', type: 'single_line_text_field', value: txHash },
+       { namespace: 'crypify', key: 'reward_amount', type: 'number_decimal', value: String(rewardAmount) },
+     ];
+     await existingOrder.save({ update: true });
+
+     // 4) JWT署名付きトークン生成
+     const token = jwt.sign(
+       { walletAddress, email: order.email, exp: Math.floor(Date.now() / 1000) + 3600 },
+       process.env.JWT_SECRET!
+     );
+
+     // 5) メール送信
+     await sendWalletEmail(order.email, token);
+
+     return new Response('Success', { status: 200 });
+   }
+   ```
+
+### Phase 3: CDP Wallet統合 🔥 (優先度: 最高)
+7. ⏳ CDP環境変数設定
+   - `CDP_API_KEY`, `CDP_API_SECRET`（Coinbase Developerから取得）
+8. ⏳ Embedded Wallet作成関数 (`/app/utils/cdp.server.ts`)
+   ```typescript
+   import { Coinbase } from '@coinbase/coinbase-sdk';
+   
+   export async function createWalletAndReward({ email, totalPrice }) {
+     const wallet = await Coinbase.createWallet({
+       userId: email,
+       network: 'base-sepolia'
+     });
+     
+     const rewardAmount = parseFloat(totalPrice) * 0.1;
+     const txHash = await wallet.transfer({
+       amount: rewardAmount,
+       asset: 'USDC',
+       destination: wallet.address
+     });
+     
+     return { walletAddress: wallet.address, txHash, rewardAmount };
+   }
+   ```
+9. ⏳ USDC Reward送金（購入額10%）
+   - Base Sepolia Testnet USDC Contract
+   - Faucetで送金元に資金供給
+
+### Phase 4: JWT署名 & メール送信 🔥 (優先度: 最高)
+10. ⏳ JWT依存追加
+    ```bash
+    pnpm add jsonwebtoken @types/jsonwebtoken
+    ```
+11. ⏳ ワンタイムトークン生成（`/app/utils/token.server.ts`)
+    ```typescript
+    import jwt from 'jsonwebtoken';
+    
+    export function generateWalletToken(walletAddress: string, email: string) {
+      return jwt.sign(
+        { walletAddress, email, exp: Math.floor(Date.now() / 1000) + 3600 },
+        process.env.JWT_SECRET!
+      );
+    }
+    
+    export function verifyWalletToken(token: string) {
+      try {
+        return jwt.verify(token, process.env.JWT_SECRET!);
+      } catch (err) {
+        throw new Error('Invalid or expired token');
+      }
+    }
+    ```
+12. ⏳ メール送信（Shopify Email API）
+    - 件名: "🎉 $X.XX USDC Rewardsをプレゼント！"
+    - 本文: `https://your-app.com/wallet?token=xxx`
+
+### Phase 5: Wallet Access Page 🔄 (優先度: 高)
+13. ⏳ `/app/routes/wallet.tsx` 実装
+    - JWT検証、Passkey認証、OnchainKit残高表示
+
+### Phase 6: Cloud Run早期デプロイ 🔥 (優先度: 最高)
+14. ⏳ Dockerfile作成
+    ```dockerfile
+    FROM node:20-alpine
+    WORKDIR /app
+    COPY package.json pnpm-lock.yaml ./
+    RUN npm install -g pnpm && pnpm install --frozen-lockfile
+    COPY . .
+    RUN pnpm build
+    CMD ["pnpm", "start"]
+    ```
+15. ⏳ Cloud Runデプロイ
+    ```bash
+    gcloud run deploy crypify \
+      --source . \
+      --region us-west1 \
+      --min-instances 1 \
+      --max-instances 10 \
+      --set-env-vars NODE_ENV=production
+    ```
+16. ⏳ Shopify App URLをCloud Run URLに変更
+    - `shopify.app.toml` の `application_url`
+    - Webhook URLも更新
+
+### Phase 7: E2Eテスト & デモ準備 🔄 (優先度: 高)
+17. ⏳ Base Sepolia 完全フローテスト
+18. ⏳ デモシナリオ & プレゼン資料
+
+### Phase 8: 本番化（ハッカソン後） 🎯
+19. ⏳ Base Mainnet移行
+20. ⏳ Offsite Payment Extension実装（Partner承認後）
 
 ---
 
@@ -181,39 +311,69 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 - ❌ CLI template一覧にPayments Extensionが存在しない
 - ✅ 手動で `extensions/crypify-payment/` ディレクトリを作成
 - ✅ `shopify.extension.toml` を手動で記述
-- ✅ ソースコード調査により `payments.custom-onsite.render` ターゲットを確認
+- ✅ 最初の実装ターゲット: `payments.offsite.render` (Offsite Payment Extension)
 
-### 2. なぜ Payment Extension (Alternative Payment) か？
+**Alternative Payment Extension (`payments.custom-onsite.render`) について**:
+- ⚠️ **招待制 (invite-only closed beta)** - Shopify公式により明記
+- ⚠️ **Payments Partner承認が前提** - 審査期間は不確定（数週間〜数ヶ月）
+- ⚠️ ハッカソン期間中の承認取得は**現実的に困難**
+- 💡 Offsite Extensionで実装後、承認取得次第Alternativeへ移行可能
 
-**比較: Theme App Extension (従来型) vs Payment Extension**
+### 2. なぜ Offsite Payment Extension か？
 
-| 項目 | Theme App Extension | Payment Extension |
-|------|-------------------|-------------------|
-| **統合場所** | 商品ページ | チェックアウト画面 |
-| **UX** | 独自ボタン配置 | Shopify標準UI統合 |
-| **CVR** | 外部リダイレクトで低下 | 同一ドメイン内で維持 |
-| **信頼性** | カスタムUI | Shopify公式決済方法 |
-| **審査** | 本番リリース時必要 | Dev Storeは不要 |
+**比較: Theme App Extension vs Offsite Payment vs Alternative Payment**
 
-**結論**: Payment Extensionがハッカソン + 本番運用の両面で最適
+| 項目 | Theme App Extension | Offsite Payment Extension | Alternative Payment Extension |
+|------|-------------------|--------------------------|------------------------------|
+| **統合場所** | 商品ページ | チェックアウト画面 | チェックアウト画面 |
+| **UX** | 独自ボタン配置 | 外部ページへリダイレクト | Shopify内で完結（iframe等） |
+| **実装難易度** | 低 | 中 | 高 |
+| **Beta Access** | 不要 | **不要** ✅ | **必須** ⚠️ (招待制) |
+| **審査期間** | 本番時のみ | 本番時のみ | **招待待ち（不確定）** |
+| **ハッカソン適合性** | △ CVR低下 | **✅ 最適** | ❌ 期間内に間に合わない |
+| **本番移行** | 困難 | **✅ Alternativeへ移行可能** | ✅ 最終形態 |
 
-### 3. なぜ リダイレクト方式 か？
+**ハッカソン戦略**:
+1. ✅ **Phase 1 (ハッカソン中)**: Offsite Payment Extensionで完全動作デモ作成
+   - Beta access不要で即座に実装開始可能
+   - 外部リダイレクトでもShopify公式決済フローに統合
+   - 実際のUSDC転送を含む完全な決済体験を実装
 
-**制約**: Checkout UI ExtensionはWeb Worker環境
+2. 🎯 **Phase 2 (ハッカソン後)**: Payments Partner申請 & Alternative移行
+   - 既存のAPI実装をそのまま活用（`payment_session_url`等は共通）
+   - `shopify.extension.toml`の`target`を`payments.offsite.render` → `payments.custom-onsite.render`に変更
+   - UX向上（外部リダイレクト不要に）
+
+**結論**: Offsite → Alternative の段階的移行がリスク最小・価値最大
+
+### 3. なぜ リダイレクト方式 (Offsite) か？
+
+**Offsite Payment Extensionの仕組み**:
+1. Shopifyチェックアウトで「Crypto (USDC on Base)」を選択
+2. **Shopifyが自動的に外部決済ページへリダイレクト** (`payment_session_url`で指定)
+3. 外部ページ（Remix App）でCDP統合の決済処理
+4. 完了後、Shopifyへリダイレクトバック
+
+**技術的制約と解決策**:
 
 ```diff
-- Web Worker環境でできないこと:
+- Checkout UI Extension (Web Worker) の制約:
   ❌ DOM API (document, window)
   ❌ Coinbase Wallet SDK
   ❌ OnchainKit Components
   ❌ CDP Server Wallets SDK
   
-+ リダイレクト方式でできること:
-  ✅ Remix App内でフルスタックJavaScript
++ Offsite Payment Extension (外部ページ) の利点:
+  ✅ Remix App内でフルスタックJavaScript実行
   ✅ OnchainKit / wagmi / viem 使用可能
   ✅ CDP SDK フル機能利用
-  ✅ 同一ドメイン内でUX維持
+  ✅ React/Next.js等のモダンフレームワーク利用可能
+  ✅ Shopify公式決済フローに統合（非公式の外部リンクではない）
 ```
+
+**Alternative Paymentとの違い**:
+- Offsite: 外部ページで決済処理（`https://your-app.com/pay/123`）
+- Alternative: Shopify内でiframe/埋め込みで決済処理（UX最適だがBeta access必須）
 
 ### 4. なぜ Base Chain か？
 
@@ -225,24 +385,6 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 | **CDP統合** | 通常サポート | ネイティブ統合（Coinbase運営） |
 
 **結論**: マイクロペイメント対応 + UX最適化のためBase一択
-
-### 5. なぜ Supabase Transaction Mode か？
-
-**Cloud Run (Serverless) の特性**:
-- 同時接続数が変動
-- 短命な接続を大量生成
-- Connection Pooling必須
-
-**Supabase接続モード比較**:
-
-| モード | Port | 用途 | Cloud Run適合性 |
-|-------|------|------|---------------|
-| Direct | 5432 | 長期接続 | ❌ 非推奨 |
-| Session Mode | 5432 | Pooling (全機能) | △ 接続数制限 |
-| **Transaction Mode** | **6543** | **Pooling (最小)** | **✅ 推奨** |
-
-**重要な制約**: Transaction ModeではPrepared Statements非サポート
-→ 対策: `DATABASE_URL` に `?pgbouncer=true` を追加
 
 ---
 
@@ -262,6 +404,29 @@ ShopifyのネイティブチェックアウトにCrypto決済（USDC on Base）�
 ---
 
 ## 🔐 セキュリティ設計
+
+### 署名付きワンタイムトークン（重要）
+
+**問題**: `/wallet/:customerId` のような直URLは列挙攻撃・なりすましリスクあり
+
+**解決策**: JWT/HMAC署名付きトークンで保護
+```typescript
+// トークン生成（Webhook内）
+import jwt from 'jsonwebtoken';
+const token = jwt.sign(
+  { 
+    walletAddress: wallet.address,
+    email: order.email,
+    exp: Math.floor(Date.now() / 1000) + 3600 // 1時間有効
+  },
+  process.env.JWT_SECRET!
+);
+const walletLink = `https://your-app.com/wallet?token=${token}`;
+
+// トークン検証（Wallet Pageロード時）
+const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+if (decoded.exp < Date.now() / 1000) throw new Error('Token expired');
+```
 
 ### 秘密鍵管理フロー
 
@@ -313,64 +478,126 @@ SHOPIFY_API_SECRET_KEY=shpss_xxx
 
 ---
 
-## 📊 データベーススキーマ
+## 📊 データ永続化（Shopify Order Metafields）
 
-### Supabase Tables
+### Order Metafields Schema（DB代わり）
 
-#### 1. `transactions` テーブル
-```sql
-CREATE TABLE transactions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id TEXT NOT NULL,           -- Shopify Payment Session ID
-  tx_hash TEXT,                        -- Base Chain Transaction Hash
-  amount DECIMAL(18, 6) NOT NULL,      -- USDC Amount
-  currency TEXT NOT NULL DEFAULT 'USDC',
-  status TEXT NOT NULL,                -- pending | completed | failed
-  from_address TEXT,                   -- User Wallet Address
-  to_address TEXT NOT NULL,            -- Merchant Wallet Address
-  metadata JSONB,                      -- Shopify Order詳細
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+**Tag**: `crypify_rewarded`（冪等性フラグ）
 
-CREATE INDEX idx_transactions_session_id ON transactions(session_id);
-CREATE INDEX idx_transactions_tx_hash ON transactions(tx_hash);
-CREATE INDEX idx_transactions_status ON transactions(status);
+**Metafields**:
+```typescript
+{
+  namespace: 'crypify',
+  key: 'wallet_address',
+  type: 'single_line_text_field',
+  value: '0x1234...abcd' // Wallet Address
+}
+
+{
+  namespace: 'crypify',
+  key: 'reward_tx_hash',
+  type: 'single_line_text_field',
+  value: '0xabcd...1234' // Base Sepolia Transaction Hash
+}
+
+{
+  namespace: 'crypify',
+  key: 'reward_amount',
+  type: 'number_decimal',
+  value: '1.50' // USDC Reward Amount
+}
 ```
 
-#### 2. `refunds` テーブル
-```sql
-CREATE TABLE refunds (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  refund_session_id TEXT NOT NULL,
-  original_transaction_id UUID REFERENCES transactions(id),
-  amount DECIMAL(18, 6) NOT NULL,
-  tx_hash TEXT,
-  status TEXT NOT NULL,               -- pending | completed | failed
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+**Shopify Admin REST APIで保存**:
+```typescript
+const order = await admin.rest.resources.Order.find({ session, id: orderId });
+order.tags = `${order.tags}, crypify_rewarded`;
+order.metafields = [
+  { namespace: 'crypify', key: 'wallet_address', type: 'single_line_text_field', value: walletAddress },
+  { namespace: 'crypify', key: 'reward_tx_hash', type: 'single_line_text_field', value: txHash },
+  { namespace: 'crypify', key: 'reward_amount', type: 'number_decimal', value: String(rewardAmount) },
+];
+await order.save({ update: true });
 ```
 
-#### 3. `payment_sessions` テーブル
-```sql
-CREATE TABLE payment_sessions (
-  session_id TEXT PRIMARY KEY,
-  amount DECIMAL(18, 6) NOT NULL,
-  currency TEXT NOT NULL,
-  redirect_url TEXT NOT NULL,
-  metadata JSONB,
-  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE INDEX idx_payment_sessions_expires_at ON payment_sessions(expires_at);
-```
+**利点**:
+- ✅ 外部DB不要
+- ✅ Shopify管理画面で直接確認可能
+- ✅ GraphQL/REST APIで簡単に取得可能
 
 ---
 
 ## 🚀 デプロイ戦略
 
-### GCP Cloud Run 設定
+### Phase 1: 開発初期 - Cloudflare Tunnel ✅
+- ✅ 現在稼働中: `https://silk-farmers-genetics-harvard.trycloudflare.com`
+- Webhook動作確認、CDP統合テスト
+
+### Phase 2: ハッカソン中盤 - Cloud Run移行 🔥
+
+**理由**: デモ詰みリスク回避、本番URLで安定稼働
+
+#### Dockerfile作成
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+
+# pnpm インストール
+RUN npm install -g pnpm
+
+# 依存関係インストール
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# アプリコピー & ビルド
+COPY . .
+RUN pnpm build
+
+# 環境変数（Cloud Runで上書き）
+ENV NODE_ENV=production
+ENV PORT=8080
+
+CMD ["pnpm", "start"]
+```
+
+#### Cloud Runデプロイ
+```bash
+# Docker イメージビルド & プッシュ
+gcloud builds submit --tag gcr.io/PROJECT_ID/crypify
+
+# Cloud Runデプロイ（DB無しなので超簡単）
+gcloud run deploy crypify \
+  --image gcr.io/PROJECT_ID/crypify \
+  --region us-west1 \
+  --platform managed \
+  --min-instances 1 \
+  --max-instances 10 \
+  --concurrency 5 \
+  --set-env-vars NODE_ENV=production \
+  --set-env-vars SHOPIFY_API_KEY=xxx \
+  --set-env-vars SHOPIFY_API_SECRET=xxx \
+  --set-env-vars CDP_API_KEY=xxx \
+  --set-env-vars CDP_API_SECRET=xxx \
+  --set-env-vars JWT_SECRET=xxx
+```
+
+#### Shopify App URL更新
+```toml
+# shopify.app.toml
+application_url = "https://crypify-xxx.run.app"
+embedded = true
+
+[webhooks]
+api_version = "2025-01"
+
+[[webhooks.subscriptions]]
+topics = ["orders/create"]
+uri = "https://crypify-xxx.run.app/api/webhooks/order_created"
+```
+
+### Phase 3: 本番化（ハッカソン後）
+
+#### GCP Cloud Run 本番設定
 
 ```yaml
 service: crypify
@@ -395,31 +622,59 @@ secrets:
   SHOPIFY_API_SECRET_KEY: latest
 ```
 
-### CI/CD Pipeline (GitHub Actions)
+### CI/CD Pipeline (ハッカソン後)
 
 ```yaml
 name: Deploy to Cloud Run
-
 on:
   push:
     branches: [main]
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-      - name: Build Docker Image
-        run: docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypify .
-      - name: Push to GCR
-        run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypify
-      - name: Deploy to Cloud Run
-        run: |
+      - uses: google-github-actions/setup-gcloud@v1
+      - run: gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypify
+      - run: |
           gcloud run deploy crypify \
             --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/crypify \
             --region us-west1 \
-            --min-instances 0 \
+            --min-instances 1 \
             --max-instances 10
 ```
+
+---
+
+## 🎯 ハッカソン最小構成まとめ
+
+### 削除したもの（デプロイリスク削減）
+- ❌ Supabase / PostgreSQL
+- ❌ Drizzle ORM / Prisma
+- ❌ DATABASE_URL
+- ❌ マイグレーション
+- ❌ 接続プール管理
+
+### 代わりに採用したもの（最小＆強力）
+- ✅ **Shopify Order Tags**（冪等性フラグ）
+- ✅ **Shopify Order Metafields**（Wallet情報永続化）
+- ✅ **JWT署名トークン**（Wallet URLセキュリティ）
+- ✅ **Cloud Run早期デプロイ**（デモ詰み回避）
+
+### 技術スタック（最終版）
+- Remix（一本化）
+- @coinbase/coinbase-sdk（CDP Embedded Wallets）
+- @base-org/account（Passkey認証）
+- @coinbase/onchainkit（UI Components）
+- jsonwebtoken（JWT署名）
+- Shopify Admin REST API（Order Metafields操作）
+- GCP Cloud Run（Hosting）
+
+### 実装優先度
+1. 🔥 Webhook Handler（HMAC検証 + Order Tags/Metafields）
+2. 🔥 CDP Wallet作成 + USDC Reward送金
+3. 🔥 JWT署名トークン生成
+4. 🔥 Cloud Runデプロイ
+5. 🔄 Wallet Access Page（JWT検証 + Passkey認証）
+6. 🔄 E2Eテスト（Base Sepolia）
+7. 🎯 デモ & プレゼン資料
