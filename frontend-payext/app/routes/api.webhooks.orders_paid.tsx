@@ -52,6 +52,20 @@ export async function action({ request }: ActionFunctionArgs) {
     );
   } catch (error) {
     console.error("[Webhook] Error:", error);
+    
+    // Shopify SDK throws Response objects for authentication failures
+    if (error instanceof Response) {
+      const errorText = await error.text();
+      console.error("[Webhook] Authentication failed:", {
+        status: error.status,
+        statusText: error.statusText,
+        body: errorText,
+      });
+      
+      // Return the error response from Shopify SDK
+      return error;
+    }
+    
     console.error("[Webhook] Error details:", {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
