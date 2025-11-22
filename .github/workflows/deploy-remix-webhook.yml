@@ -1,19 +1,19 @@
-name: Deploy Remix Webhook to Cloud Run
+name: Deploy Crypify API to Cloud Run
 
 on:
   push:
     branches:
-      - DEPLOY-DISABLED  # Auto-deploy disabled
+      - main
     paths:
-      - 'frontend-payext/**'
+      - 'api/**'
       - '.github/workflows/deploy-remix-webhook.yml'
   workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: us-west1
-  SERVICE_NAME: crypfy-webhook-ed964dc6
-  ARTIFACT_REGISTRY: us-west1-docker.pkg.dev
+  REGION: asia-northeast1
+  SERVICE_NAME: crypify-api
+  ARTIFACT_REGISTRY: asia-northeast1-docker.pkg.dev
   REPOSITORY: crypify
 
 jobs:
@@ -45,7 +45,7 @@ jobs:
         run: |
           docker build -t $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }} \
             -t $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
-            ./frontend-payext
+            ./api
       
       - name: Push Docker image to Artifact Registry
         run: |
@@ -74,14 +74,17 @@ jobs:
             --max-instances 10 \
             --memory 512Mi \
             --cpu 1 \
-            --concurrency 5 \
+            --concurrency 80 \
             --timeout 60s \
-            --set-env-vars NODE_ENV=production,SHOPIFY_APP_URL=https://placeholder.com,SCOPES=write_orders:read_customers \
-            --update-secrets SHOPIFY_API_KEY=SHOPIFY_API_KEY:latest \
-            --update-secrets SHOPIFY_API_SECRET=SHOPIFY_API_SECRET:latest \
+            --set-env-vars NODE_ENV=production \
             --update-secrets CDP_API_KEY=CDP_API_KEY:latest \
             --update-secrets CDP_API_SECRET=CDP_API_SECRET:latest \
-            --update-secrets JWT_SECRET=JWT_SECRET:latest
+            --update-secrets SMTP_HOST=SMTP_HOST:latest \
+            --update-secrets SMTP_PORT=SMTP_PORT:latest \
+            --update-secrets SMTP_USER=SMTP_USER:latest \
+            --update-secrets SMTP_PASS=SMTP_PASS:latest \
+            --update-secrets FROM_EMAIL=FROM_EMAIL:latest \
+            --update-secrets FRONTEND_URL=FRONTEND_URL:latest
       
       - name: Get Cloud Run URL
         id: get-url
@@ -92,17 +95,21 @@ jobs:
           echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
           echo "🚀 Deployed to: $SERVICE_URL"
       
-      - name: Update SHOPIFY_APP_URL with actual URL
-        run: |
-          gcloud run services update $SERVICE_NAME \
-            --region $REGION \
-            --update-env-vars "SHOPIFY_APP_URL=${{ steps.get-url.outputs.service_url }}"
-      
       - name: Output deployment info
         run: |
-          echo "### 🎉 Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎉 Crypify API Deployment Successful!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Service:** $SERVICE_NAME" >> $GITHUB_STEP_SUMMARY
           echo "**Region:** $REGION" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** ${{ steps.get-url.outputs.service_url }}" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Endpoints:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Health: ${{ steps.get-url.outputs.service_url }}/" >> $GITHUB_STEP_SUMMARY
+          echo "- Purchase: ${{ steps.get-url.outputs.service_url }}/purchase" >> $GITHUB_STEP_SUMMARY
+          echo "- Pay: ${{ steps.get-url.outputs.service_url }}/pay" >> $GITHUB_STEP_SUMMARY
+          echo "- Wallet: ${{ steps.get-url.outputs.service_url }}/wallet" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Update web deployment with API_BASE_URL=${{ steps.get-url.outputs.service_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "2. Test API endpoints" >> $GITHUB_STEP_SUMMARY

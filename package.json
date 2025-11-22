@@ -1,0 +1,13 @@
+{
+  "name": "crypify",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev:web": "pnpm --filter crypify-web dev",
+    "dev:api": "pnpm --filter crypify-api dev",
+    "build:web": "pnpm --filter crypify-web build",
+    "build:api": "pnpm --filter crypify-api build",
+    "install:all": "pnpm install"
+  }
+}

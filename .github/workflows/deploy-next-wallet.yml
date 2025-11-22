@@ -1,19 +1,19 @@
-name: Deploy Next.js Wallet UI to Cloud Run
+name: Deploy Crypify Web to Cloud Run
 
 on:
   push:
     branches:
-      - DEPLOY-DISABLED  # Auto-deploy disabled
+      - main
     paths:
-      - 'wallet-ui/**'
+      - 'web/**'
       - '.github/workflows/deploy-next-wallet.yml'
   workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: us-west1
-  SERVICE_NAME: crypfy-wallet-a31f697f
-  ARTIFACT_REGISTRY: us-west1-docker.pkg.dev
+  REGION: asia-northeast1
+  SERVICE_NAME: crypify-web
+  ARTIFACT_REGISTRY: asia-northeast1-docker.pkg.dev
   REPOSITORY: crypify
 
 jobs:
@@ -44,7 +44,7 @@ jobs:
         run: |
           docker build -t $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }} \
             -t $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
-            ./wallet-ui
+            ./web
       
       - name: Push Docker image to Artifact Registry
         run: |
@@ -58,14 +58,14 @@ jobs:
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
-            --min-instances 1 \
+            --min-instances 0 \
             --max-instances 10 \
             --memory 512Mi \
             --cpu 1 \
             --concurrency 80 \
             --timeout 30s \
             --set-env-vars "NODE_ENV=production" \
-            --update-secrets "JWT_SECRET=JWT_SECRET:latest"
+            --update-secrets "API_BASE_URL=API_BASE_URL:latest"
       
       - name: Get Cloud Run URL
         id: get-url
@@ -78,7 +78,7 @@ jobs:
       
       - name: Output deployment info
         run: |
-          echo "### 🎉 Wallet UI Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎉 Crypify Web Deployment Successful!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Service:** $SERVICE_NAME" >> $GITHUB_STEP_SUMMARY
           echo "**Region:** $REGION" >> $GITHUB_STEP_SUMMARY
@@ -86,5 +86,5 @@ jobs:
           echo "**Image:** $ARTIFACT_REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
-          echo "1. Update email template with: ${{ steps.get-url.outputs.service_url }}/start" >> $GITHUB_STEP_SUMMARY
-          echo "2. Test the wallet access flow" >> $GITHUB_STEP_SUMMARY
+          echo "1. Visit: ${{ steps.get-url.outputs.service_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "2. Test the shop flow: /shop → /thanks → /wallet" >> $GITHUB_STEP_SUMMARY
