@@ -10,7 +10,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@coinbase/coinbase-sdk": "^0.10.0",
+    "@coinbase/cdp-sdk": "^1.38.6",
     "@sendgrid/mail": "^8.1.0",
     "cors": "^2.8.5",
     "express": "^4.19.0"

@@ -1,8 +1,9 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
-import { purchaseRouter } from "./routes/purchase";
-import { payRouter } from "./routes/pay";
-import { walletRouter } from "./routes/wallet";
+import quickBuyRouter from "./routes/quickBuy";
+import merchantRouter from "./routes/merchant";
+import payRouter from "./routes/pay";
+import claimRouter from "./routes/claim";
 
 const app = express();
 app.use(express.json());
@@ -10,9 +11,10 @@ app.use(express.json());
 // デモなら緩めでOK。後で web のURLに絞る
 app.use(cors({ origin: true }));
 
-app.use("/purchase", purchaseRouter);
+app.use("/quick-buy", quickBuyRouter);
+app.use("/merchant-address", merchantRouter);
 app.use("/pay", payRouter);
-app.use("/wallet", walletRouter);
+app.use("/claim", claimRouter);
 
 // Health check
 app.get("/", (req: Request, res: Response) => {

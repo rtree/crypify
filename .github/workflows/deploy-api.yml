@@ -79,6 +79,9 @@ jobs:
             --set-env-vars NODE_ENV=production \
             --update-secrets CDP_API_KEY=CDP_API_KEY:latest \
             --update-secrets CDP_API_SECRET=CDP_API_SECRET:latest \
+            --update-secrets CDP_WALLET_SECRET=CDP_WALLET_SECRET:latest \
+            --update-secrets MERCHANT_WALLET_ADDRESS=MERCHANT_WALLET_ADDRESS:latest \
+            --update-secrets CLAIM_SECRET=CLAIM_SECRET:latest \
             --update-secrets SENDGRID_API_KEY=SENDGRID_API_KEY:latest \
             --update-secrets FROM_EMAIL=FROM_EMAIL:latest \
             --update-secrets FRONTEND_URL=FRONTEND_URL:latest
