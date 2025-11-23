@@ -65,8 +65,16 @@
    - HMAC署名付きclaimトークン生成
    - メール送信：`FRONTEND_URL/claim?token=xxx`
 
-4. **Claim処理**（Server Walletsでgasless transfer）
-   - GET `/api/claim?token=xxx` でtoken検証
+4. **Claim処理**（Embedded Wallets自動作成 + Server Walletsでgasless transfer）
+   - ユーザーがメールのClaimリンクをクリック
+   - **Claim画面で認証チェック：**
+     - 既にサインイン済み → 即座にClaim実行
+     - 未サインイン → Email OTP認証フロー開始
+   - **Email OTP認証（CDP Embedded Wallets）：**
+     - メールアドレス入力 → CDP経由でOTP送信
+     - 6桁コード検証 → CDP側でEmbedded Wallet自動作成/既存ログイン
+     - 新規ユーザーの場合 → 0.001 ETHをファンド（gas代）
+   - GET `/api/claim?token=xxx&userAddress=0x...` でtoken検証
    - Merchant Server WalletからユーザーアドレスへUSDC送金（gasless）
    - 完了通知
 
@@ -140,10 +148,27 @@ sequenceDiagram
     API->>SendGrid: メール送信<br/>FRONTEND_URL/claim?token=xxx
     API-->>WebFront: success
     
-    %% Claim処理
+    %% Claim処理（Embedded Wallets自動作成）
     User->>SendGrid: メール確認
     User->>WebFront: GET /claim?token=xxx
-    WebFront->>API: GET /claim?token=xxx
+    WebFront->>WebFront: 認証状態チェック
+    
+    alt 未サインイン
+        WebFront->>User: Email OTP入力画面表示
+        User->>WebFront: メールアドレス入力
+        WebFront->>CDP: Email OTP送信
+        CDP-->>User: OTPメール送信
+        User->>WebFront: 6桁OTP入力
+        WebFront->>CDP: OTP検証
+        CDP-->>WebFront: Embedded Wallet作成/ログイン<br/>(userId=email, isNewUser)
+        
+        alt isNewUser=true
+            WebFront->>API: POST /fund-wallet<br/>{address, amount: "0.001"}
+            API-->>WebFront: 0.001 ETH funded
+        end
+    end
+    
+    WebFront->>API: GET /claim?token=xxx&userAddress=0x...
     API->>API: HMAC検証
     API->>CDP: Server Wallet gasless transfer<br/>(from: merchant, to: userAddress)
     CDP-->>API: rewardTxHash

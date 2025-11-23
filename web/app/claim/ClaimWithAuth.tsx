@@ -2,121 +2,150 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import {
-  useSignInWithEmail,
-  useVerifyEmailOTP,
-  useIsSignedIn,
-  useEvmAddress,
-  useCurrentUser,
-} from "@coinbase/cdp-hooks";
+import { useSignInWithEmail, useVerifyEmailOTP, useCurrentUser, useEvmAddress } from "@coinbase/cdp-hooks";
 
 export default function ClaimWithAuth() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState("");
-  const [step, setStep] = useState<"verify-email" | "verify-otp" | "claiming" | "done">("verify-email");
-  
-  // Email OTP認証
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [flowId, setFlowId] = useState<string | null>(null);
-  
   const { signInWithEmail } = useSignInWithEmail();
   const { verifyEmailOTP } = useVerifyEmailOTP();
-  const { isSignedIn } = useIsSignedIn();
-  const { evmAddress } = useEvmAddress();
   const { currentUser } = useCurrentUser();
+  const { evmAddress } = useEvmAddress();
 
-  // トークンがない場合
+  const [step, setStep] = useState<"checking" | "email" | "otp" | "claiming" | "success" | "error">("checking");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [flowId, setFlowId] = useState("");
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<any>(null);
+  const [tokenEmail, setTokenEmail] = useState("");
+
+  // トークンからメールアドレスを取得
   useEffect(() => {
     if (!token) {
       setError("Invalid claim link");
+      setStep("error");
+      return;
     }
+
+    try {
+      const [b64] = token.split(".");
+      const payload = JSON.parse(atob(b64));
+      setTokenEmail(payload.email || "");
+      setEmail(payload.email || "");
+    } catch (err) {
+      setError("Invalid claim token format");
+      setStep("error");
+      return;
+    }
+
+    // 既にサインイン済みかチェック
+    checkAuthStatus();
   }, [token]);
 
-  // サインイン済みなら自動でClaimを実行
-  useEffect(() => {
-    if (isSignedIn && evmAddress && token && step === "claiming") {
-      executeClaim();
+  // 認証状態をチェック
+  async function checkAuthStatus() {
+    if (currentUser && evmAddress) {
+      console.log("✅ Already signed in, claiming directly...");
+      await executeClaim(evmAddress);
+    } else {
+      console.log("⚠️ Not signed in, need email authentication");
+      setStep("email");
     }
-  }, [isSignedIn, evmAddress, token, step]);
+  }
 
-  // Step 1: メールアドレス送信
+  // Step 1: メール認証開始
   async function handleSendOTP() {
-    if (!email || !token) return;
-    
-    setLoading(true);
+    if (!email) {
+      setError("Please enter your email");
+      return;
+    }
+
     try {
+      setError("");
+      console.log("📧 Sending OTP to:", email);
       const result = await signInWithEmail({ email });
       setFlowId(result.flowId);
-      setStep("verify-otp");
-      setError("");
+      setStep("otp");
+      console.log("✅ OTP sent! flowId:", result.flowId);
     } catch (err: any) {
-      setError(`Failed to send OTP: ${err.message}`);
-    } finally {
-      setLoading(false);
+      console.error("❌ Failed to send OTP:", err);
+      setError(err.message || "Failed to send OTP");
     }
   }
 
   // Step 2: OTP検証
   async function handleVerifyOTP() {
-    if (!flowId || !otp) return;
-    
-    setLoading(true);
+    if (!otp || otp.length !== 6) {
+      setError("Please enter 6-digit OTP");
+      return;
+    }
+
     try {
+      setError("");
+      console.log("🔐 Verifying OTP...", { flowId, otp });
+      
       const { user, isNewUser } = await verifyEmailOTP({ flowId, otp });
       
-      console.log("✅ Signed in!", { 
+      console.log("✅ OTP verified!", { 
         isNewUser, 
-        evmAccounts: user.evmAccounts
+        evmAccounts: user.evmAccounts,
+        userId: user.userId 
       });
-      
-      setStep("claiming");
-      setError("");
-      
-      // 新規ユーザーの場合、Wallet作成完了を待つ
-      if (isNewUser) {
-        await fundNewWallet(user.evmAccounts?.[0]);
+
+      // EVMアドレス取得
+      const userAddress = user.evmAccounts?.[0];
+      if (!userAddress) {
+        throw new Error("No EVM address found");
       }
-      
+
+      if (isNewUser) {
+        console.log("🆕 New user! Wallet created:", userAddress);
+        // 新規ユーザーの場合、0.001 ETHをファンド
+        await fundNewWallet(userAddress);
+      } else {
+        console.log("👤 Existing user, wallet:", userAddress);
+      }
+
+      // Claim実行
+      await executeClaim(userAddress);
     } catch (err: any) {
-      setError(`OTP verification failed: ${err.message}`);
-      setLoading(false);
+      console.error("❌ Failed to verify OTP:", err);
+      setError(err.message || "Failed to verify OTP");
     }
   }
 
-  // Step 3: 新規Walletに初期資金を提供（Base Sepolia ETH）
-  async function fundNewWallet(address: string | undefined) {
-    if (!address) return;
-    
+  // 新規ウォレットに0.001 ETHをファンド
+  async function fundNewWallet(address: string) {
     try {
-      console.log("🔋 Funding new wallet with 0.001 ETH...", address);
-      
-      // CDP Faucet API経由で0.001 ETH付与
-      // Note: これはバックエンド経由で実行する必要があります
-      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/fund-wallet`, {
+      console.log("💰 Funding new wallet with 0.001 ETH...", address);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/fund-wallet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, amount: "0.001" }),
+        body: JSON.stringify({ address, amount: "0.001" })
       });
-      
-      console.log("✅ Wallet funded successfully!");
+
+      if (!res.ok) {
+        console.warn("⚠️ Failed to fund wallet (non-blocking)");
+      } else {
+        const data = await res.json();
+        console.log("✅ Wallet funded:", data);
+      }
     } catch (err) {
-      console.warn("⚠️ Failed to fund wallet (continuing anyway):", err);
+      console.warn("⚠️ Fund wallet error (non-blocking):", err);
     }
   }
 
-  // Step 4: Claim実行
-  async function executeClaim() {
-    if (!token || !evmAddress) return;
-    
-    setLoading(true);
+  // Claim実行
+  async function executeClaim(userAddress: string) {
+    setStep("claiming");
+
     try {
+      console.log("🎁 Claiming reward...", { token, userAddress });
+      
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/claim?token=${encodeURIComponent(token)}&userAddress=${evmAddress}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/claim?token=${encodeURIComponent(token!)}&userAddress=${encodeURIComponent(userAddress)}`
       );
       
       if (!res.ok) {
@@ -125,29 +154,190 @@ export default function ClaimWithAuth() {
       }
       
       const data = await res.json();
+      console.log("✅ Claim successful!", data);
       setResult(data);
-      setStep("done");
-      setError("");
+      setStep("success");
     } catch (err: any) {
+      console.error("❌ Claim failed:", err);
       setError(err.message);
-    } finally {
-      setLoading(false);
+      setStep("error");
     }
   }
 
-  // Error画面
-  if (error && !token) {
+  // Step: checking
+  if (step === "checking") {
     return (
       <div className="container">
         <div className="card">
-          <div className="error">{error}</div>
+          <div className="loading">🔍 Checking authentication status...</div>
         </div>
       </div>
     );
   }
 
-  // 成功画面
-  if (step === "done" && result) {
+  // Step: email input
+  if (step === "email") {
+    return (
+      <div className="container">
+        <div className="card">
+          <h1 style={{ fontSize: '32px', marginBottom: '20px', textAlign: 'center' }}>
+            🎁 Claim Your Reward
+          </h1>
+
+          <p style={{ marginBottom: '24px', textAlign: 'center', color: '#666' }}>
+            Enter your email to verify and claim your USDC reward
+          </p>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                fontSize: '16px'
+              }}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendOTP()}
+            />
+          </div>
+
+          {error && (
+            <div className="error" style={{ marginBottom: '16px' }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleSendOTP}
+            className="button"
+            style={{ width: '100%' }}
+          >
+            Send Verification Code 📧
+          </button>
+
+          {tokenEmail && (
+            <p style={{ marginTop: '16px', fontSize: '14px', color: '#666', textAlign: 'center' }}>
+              💡 Claim link sent to: <strong>{tokenEmail}</strong>
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Step: OTP verification
+  if (step === "otp") {
+    return (
+      <div className="container">
+        <div className="card">
+          <h1 style={{ fontSize: '32px', marginBottom: '20px', textAlign: 'center' }}>
+            🔐 Verify Your Email
+          </h1>
+
+          <p style={{ marginBottom: '24px', textAlign: 'center', color: '#666' }}>
+            We sent a 6-digit code to <strong>{email}</strong>
+          </p>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+              Verification Code
+            </label>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="123456"
+              maxLength={6}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                fontSize: '24px',
+                letterSpacing: '8px',
+                textAlign: 'center',
+                fontWeight: '600'
+              }}
+              onKeyPress={(e) => e.key === 'Enter' && handleVerifyOTP()}
+            />
+          </div>
+
+          {error && (
+            <div className="error" style={{ marginBottom: '16px' }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleVerifyOTP}
+            className="button"
+            style={{ width: '100%', marginBottom: '12px' }}
+            disabled={otp.length !== 6}
+          >
+            Verify & Claim Reward 🎁
+          </button>
+
+          <button
+            onClick={() => setStep("email")}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: 'transparent',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              color: '#666'
+            }}
+          >
+            ← Back to Email
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Step: claiming
+  if (step === "claiming") {
+    return (
+      <div className="container">
+        <div className="card">
+          <div className="loading">🎁 Claiming your USDC reward...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Step: error
+  if (step === "error") {
+    return (
+      <div className="container">
+        <div className="card">
+          <h1 style={{ fontSize: '32px', marginBottom: '20px', textAlign: 'center' }}>
+            ❌ Claim Failed
+          </h1>
+          <div className="error">{error}</div>
+          <button
+            onClick={() => window.location.reload()}
+            className="button"
+            style={{ width: '100%', marginTop: '16px' }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Step: success
+  if (step === "success" && result) {
     return (
       <div className="container">
         <div className="card">
@@ -198,137 +388,6 @@ export default function ClaimWithAuth() {
     );
   }
 
-  // メール入力画面
-  if (step === "verify-email") {
-    return (
-      <div className="container">
-        <div className="card">
-          <h1 style={{ fontSize: '32px', marginBottom: '20px', textAlign: 'center' }}>
-            🎁 Claim Your Reward
-          </h1>
-
-          <p style={{ marginBottom: '24px', textAlign: 'center', color: '#666' }}>
-            Enter your email to verify and receive your USDC reward
-          </p>
-
-          <div className="form-group">
-            <label>Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              disabled={loading}
-            />
-          </div>
-
-          {error && (
-            <div style={{
-              padding: '12px',
-              background: '#fee',
-              borderRadius: '4px',
-              color: '#c00',
-              marginBottom: '20px'
-            }}>
-              {error}
-            </div>
-          )}
-
-          <button 
-            onClick={handleSendOTP} 
-            disabled={loading || !email}
-            className="button"
-            style={{ width: '100%' }}
-          >
-            {loading ? "Sending..." : "Send Verification Code"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // OTP入力画面
-  if (step === "verify-otp") {
-    return (
-      <div className="container">
-        <div className="card">
-          <h1 style={{ fontSize: '32px', marginBottom: '20px', textAlign: 'center' }}>
-            📧 Enter Verification Code
-          </h1>
-
-          <p style={{ marginBottom: '24px', textAlign: 'center', color: '#666' }}>
-            We sent a 6-digit code to <strong>{email}</strong>
-          </p>
-
-          <div className="form-group">
-            <label>Verification Code</label>
-            <input
-              type="text"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder="123456"
-              maxLength={6}
-              disabled={loading}
-              style={{ fontSize: '24px', textAlign: 'center', letterSpacing: '8px' }}
-            />
-          </div>
-
-          {error && (
-            <div style={{
-              padding: '12px',
-              background: '#fee',
-              borderRadius: '4px',
-              color: '#c00',
-              marginBottom: '20px'
-            }}>
-              {error}
-            </div>
-          )}
-
-          <button 
-            onClick={handleVerifyOTP} 
-            disabled={loading || otp.length !== 6}
-            className="button"
-            style={{ width: '100%' }}
-          >
-            {loading ? "Verifying..." : "Verify & Claim Reward"}
-          </button>
-
-          <button
-            onClick={() => setStep("verify-email")}
-            disabled={loading}
-            style={{
-              marginTop: '12px',
-              width: '100%',
-              background: 'transparent',
-              border: 'none',
-              color: '#667eea',
-              cursor: 'pointer'
-            }}
-          >
-            ← Change Email
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Claiming画面
-  if (step === "claiming") {
-    return (
-      <div className="container">
-        <div className="card">
-          <div className="loading" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>⏳</div>
-            <h2>Claiming your reward...</h2>
-            <p style={{ color: '#666', marginTop: '12px' }}>
-              This may take a few seconds
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return null;
 }
+
