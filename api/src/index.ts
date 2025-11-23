@@ -4,6 +4,7 @@ import quickBuyRouter from "./routes/quickBuy";
 import merchantRouter from "./routes/merchant";
 import payRouter from "./routes/pay";
 import claimRouter from "./routes/claim";
+import fundWalletRouter from "./routes/fundWallet";
 
 const app = express();
 app.use(express.json());
@@ -15,6 +16,7 @@ app.use("/quick-buy", quickBuyRouter);
 app.use("/merchant-address", merchantRouter);
 app.use("/pay", payRouter);
 app.use("/claim", claimRouter);
+app.use("/fund-wallet", fundWalletRouter);
 
 // Health check
 app.get("/", (req: Request, res: Response) => {

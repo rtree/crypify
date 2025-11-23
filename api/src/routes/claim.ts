@@ -9,10 +9,14 @@ const router = Router();
 router.get("/", async (req, res) => {
   try {
     const token = String(req.query.token || "");
+    const userAddressFromQuery = req.query.userAddress as string | undefined;
     
     // Token検証（HMAC）
     const payload = verifyClaimToken(token);
-    const { userAddress, rewardUsd, expiresAt, email } = payload;
+    const { userAddress: tokenUserAddress, rewardUsd, expiresAt, email } = payload;
+    
+    // userAddressはクエリパラメータ優先（Embedded Wallet作成後）
+    const userAddress = userAddressFromQuery || tokenUserAddress;
     
     // 期限チェック
     if (Date.now() > expiresAt) {
