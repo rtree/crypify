@@ -62,6 +62,13 @@ export default function ClaimWithAuth() {
       return;
     }
 
+    // 既にサインイン済みの場合は直接Claim実行
+    if (currentUser && evmAddress) {
+      console.log("✅ Already signed in, skipping OTP");
+      await executeClaim(evmAddress);
+      return;
+    }
+
     try {
       setError("");
       console.log("📧 Sending OTP to:", email);
