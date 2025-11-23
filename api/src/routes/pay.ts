@@ -17,8 +17,8 @@ router.post("/", async (req, res) => {
     return res.status(404).json({ error: "Purchase not found" });
   }
   
-  // 報酬額計算（10%）
-  const rewardUsd = (purchase.priceUsd * 0.1).toFixed(2);
+  // 報酬額（固定）
+  const rewardUsd = "0.001";
   
   // Claim token生成（HMAC署名付き）
   const expiresAt = Date.now() + 1000 * 60 * 60 * 24; // 24h
