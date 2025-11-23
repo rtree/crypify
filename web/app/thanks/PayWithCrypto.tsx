@@ -38,16 +38,16 @@ export default function PayWithCrypto({ purchaseId, email: initialEmail, priceUs
   const [status, setStatus] = useState("");
   const [paying, setPaying] = useState(false);
 
-  const signIn = useSignInWithEmail();
-  const verifyOtp = useVerifyEmailOTP();
+  const { signInWithEmail } = useSignInWithEmail();
+  const { verifyEmailOTP } = useVerifyEmailOTP();
   const isSignedIn = useIsSignedIn();
-  const evmAddress = useEvmAddress();
+  const { evmAddress } = useEvmAddress();
   const { sendEvmTransaction } = useSendEvmTransaction();
 
   async function startEmailLogin() {
     setStatus("Sending OTP...");
     try {
-      const result = await signIn(email);
+      const result = await signInWithEmail({ email });
       setFlowId(result.flowId);
       setStatus("OTP sent to your email");
     } catch (err) {
@@ -60,7 +60,7 @@ export default function PayWithCrypto({ purchaseId, email: initialEmail, priceUs
     if (!flowId) return;
     setStatus("Verifying OTP...");
     try {
-      await verifyOtp({ flowId, otp });
+      await verifyEmailOTP({ flowId, otp });
       setStatus("Signed in successfully!");
     } catch (err) {
       setStatus("Invalid OTP");
@@ -73,6 +73,8 @@ export default function PayWithCrypto({ purchaseId, email: initialEmail, priceUs
       setStatus("Wallet not ready");
       return;
     }
+
+    const userAddress = evmAddress; // null チェック後なので string 型
 
     setPaying(true);
     setStatus("Getting merchant address...");
@@ -91,7 +93,7 @@ export default function PayWithCrypto({ purchaseId, email: initialEmail, priceUs
       
       // CDP SDK経由でEmbedded Walletから送金
       const result = await sendEvmTransaction({
-        evmAccount: evmAddress,
+        evmAccount: userAddress as `0x${string}`,
         transaction: {
           to: USDC_BASE_SEPOLIA,
           data: `0xa9059cbb${merchantAddress.slice(2).padStart(64, '0')}${amount.toString(16).padStart(64, '0')}`, // transfer(address,uint256)
@@ -112,7 +114,7 @@ export default function PayWithCrypto({ purchaseId, email: initialEmail, priceUs
         body: JSON.stringify({
           purchaseId,
           email,
-          userAddress: evmAddress,
+          userAddress,
           txHash,
         }),
       });
