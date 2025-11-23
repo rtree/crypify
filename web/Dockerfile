@@ -30,6 +30,7 @@ RUN pnpm install --frozen-lockfile
 # Copy web source code
 COPY web/app ./web/app
 COPY web/lib ./web/lib
+COPY web/public ./web/public
 
 # Build the Next.js app
 WORKDIR /root/monorepo/web
@@ -55,6 +56,7 @@ RUN pnpm install --prod --frozen-lockfile
 
 # Copy built files from builder
 COPY --from=builder /root/monorepo/web/.next ./web/.next
+COPY --from=builder /root/monorepo/web/public ./web/public
 
 # Set working directory to web
 WORKDIR /root/monorepo/web
