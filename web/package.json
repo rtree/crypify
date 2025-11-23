@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "dev": "next dev",
+    "dev": "./dev.sh",
     "build": "next build",
     "start": "next start -p ${PORT:-8080}",
     "lint": "next lint"

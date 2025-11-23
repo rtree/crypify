@@ -1,9 +1,4 @@
-import { config } from "dotenv";
 import { CdpClient } from "@coinbase/cdp-sdk";
-import path from "path";
-
-// .env.localを明示的にロード
-config({ path: path.resolve(__dirname, "../../.env.local") });
 
 // CDP SDK v2 Client初期化
 const cdp = new CdpClient({
