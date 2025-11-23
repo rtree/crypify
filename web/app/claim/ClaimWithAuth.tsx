@@ -226,7 +226,7 @@ export default function ClaimWithAuth() {
             className="button"
             style={{ width: '100%' }}
           >
-            Send Verification Code 📧
+            {currentUser && evmAddress ? 'Claim Your Reward 🎁' : 'Send Verification Code 📧'}
           </button>
 
           {tokenEmail && (
@@ -387,7 +387,7 @@ export default function ClaimWithAuth() {
             </p>
           </div>
 
-          <a href="/shop" className="button" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+          <a href="/" className="button" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
             Shop More 🛍️
           </a>
         </div>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Bag - Crypify</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="bag.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <style>
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-close:hover {
+            color: #000;
+        }
+
+        .modal-title {
+            font-family: var(--font-serif);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:disabled {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+
+        .modal-actions {
+            margin-top: 2rem;
+        }
+
+        .btn-full {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .success-message h2 {
+            color: #4CAF50;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .success-message p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        #cdp-wallet-widget {
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="announcement-bar">
+        <p>Free shipping on orders over $100</p>
+    </div>
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="header-left">
+                <a href="index.html" aria-label="Back to shop"><i data-feather="arrow-left"></i></a>
+            </div>
+            <div class="header-center">
+                <a href="index.html" class="logo-link">
+                    <img src="img/logo3.png" alt="Crypify Logo" class="logo-img">
+                </a>
+            </div>
+            <div class="header-right">
+                <a href="#" aria-label="Search"><i data-feather="search"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <main class="bag-main">
+        <div class="container">
+            <h1 class="bag-title">Shopping Bag</h1>
+            <div class="bag-grid">
+                <div class="bag-items">
+                    <div class="bag-item">
+                        <div class="item-image">
+                            <img src="img/sac.png" alt="Genuine Leather Backpack">
+                        </div>
+                        <div class="item-details">
+                            <p class="item-name">Genuine Leather Backpack</p>
+                            <p class="item-price">$5,000.00</p>
+                        </div>
+                        <div class="item-quantity">
+                            <input type="number" value="1" min="1">
+                        </div>
+                        <div class="item-total">
+                            <p>$5,000.00</p>
+                        </div>
+                        <div class="item-remove">
+                            <button aria-label="Remove item"><i data-feather="x"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bag-summary">
+                    <h2>Order summary</h2>
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>$5,000.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Shipping</span>
+                        <span>Calculated at next step</span>
+                    </div>
+                    <div class="summary-total">
+                        <span>Total</span>
+                        <span>$5,000.00 USD</span>
+                    </div>
+                    <p class="summary-note">Taxes and shipping calculated at checkout</p>
+                    <button class="btn btn-primary btn-full" id="btn-credit-card">Credit Card</button>
+                    <button class="btn btn-secondary btn-full" id="btn-crypto-pay">Crypto Pay</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Credit Card Modal -->
+    <div class="modal-overlay" id="modal-credit-card">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('modal-credit-card')">&times;</button>
+            <div id="credit-card-form">
+                <h2 class="modal-title">Credit Card Payment</h2>
+                <form id="form-credit-card">
+                    <div class="form-group">
+                        <label>Card Number</label>
+                        <input type="text" value="4242 4242 4242 4242" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <input type="text" value="12/25" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>CVC</label>
+                        <input type="text" value="123" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="credit-email" required placeholder="your@email.com">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn btn-primary btn-full">Complete Purchase</button>
+                        <button type="button" class="btn btn-secondary btn-full" onclick="closeModal('modal-credit-card')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <div id="credit-card-success" style="display: none;">
+                <div class="success-message">
+                    <h2>✓ Purchase Complete!</h2>
+                    <p>Check your email for your reward claim link.</p>
+                    <a href="index.html" class="btn btn-primary btn-full">Return to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crypto Pay Modal -->
+    <div class="modal-overlay" id="modal-crypto-pay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('modal-crypto-pay')">&times;</button>
+            <div id="crypto-pay-widget">
+                <h2 class="modal-title">Crypto Payment</h2>
+                <div class="loading">
+                    <p>Loading Coinbase wallet...</p>
+                </div>
+            </div>
+            <div id="crypto-pay-success" style="display: none;">
+                <div class="success-message">
+                    <h2>✓ Purchase Complete!</h2>
+                    <p>Check your email for your reward claim link.</p>
+                    <a href="index.html" class="btn btn-primary btn-full">Return to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="payment-methods">
+                <img src="img/card.png" alt="Card">
+            </div>
+            <p>&copy; 2025, Crypify</p>
+        </div>
+    </footer>
+
+    <script>
+        feather.replace();
+
+        const API_BASE_URL = '/api'; // Will be proxied to backend
+
+        // Open Credit Card Modal
+        document.getElementById('btn-credit-card').addEventListener('click', () => {
+            document.getElementById('modal-credit-card').classList.add('active');
+        });
+
+        // Open Crypto Pay Modal
+        document.getElementById('btn-crypto-pay').addEventListener('click', () => {
+            document.getElementById('modal-crypto-pay').classList.add('active');
+            loadCryptoPayWidget();
+        });
+
+        // Close Modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Credit Card Form Submit
+        document.getElementById('form-credit-card').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('credit-email').value;
+            
+            try {
+                // Call Quick Buy API
+                const response = await fetch(`${API_BASE_URL}/quick-buy?product=Genuine Leather Backpack&price=5000&email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+                
+                if (data.purchaseId) {
+                    // Simulate payment success and trigger email
+                    await fetch(`${API_BASE_URL}/pay`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            purchaseId: data.purchaseId,
+                            email: email,
+                            userAddress: '0x0000000000000000000000000000000000000000',
+                            txHash: '0xmock' + Date.now()
+                        })
+                    });
+                    
+                    // Show success
+                    document.getElementById('credit-card-form').style.display = 'none';
+                    document.getElementById('credit-card-success').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Payment failed:', error);
+                alert('Payment failed. Please try again.');
+            }
+        });
+
+        // Load Crypto Pay Widget (Coinbase CDP)
+        async function loadCryptoPayWidget() {
+            // TODO: Implement CDP wallet integration
+            // For now, show a placeholder
+            document.querySelector('#crypto-pay-widget .loading').innerHTML = `
+                <p>Crypto payment coming soon...</p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                    This will integrate with Coinbase Commerce or CDP Embedded Wallets.
+                </p>
+                <button class="btn btn-secondary" onclick="closeModal('modal-crypto-pay')" style="margin-top: 2rem;">Close</button>
+            `;
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
