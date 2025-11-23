@@ -1,9 +1,10 @@
 import { CdpClient } from "@coinbase/cdp-sdk";
 
 // CDP SDK v2 Client初期化
+// Cloud Run: CDP_API_KEY と CDP_API_SECRET は Secret Manager から注入される
 const cdp = new CdpClient({
-  apiKeyId: process.env.CDP_API_KEY_ID!,
-  apiKeySecret: process.env.CDP_API_KEY_SECRET!,
+  apiKeyId: process.env.CDP_API_KEY!,
+  apiKeySecret: process.env.CDP_API_SECRET!,
   walletSecret: process.env.CDP_WALLET_SECRET!,
 });
 
