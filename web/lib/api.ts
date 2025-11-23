@@ -1,8 +1,5 @@
-const API_BASE = process.env.API_BASE_URL!;
-
-if (!API_BASE) {
-  throw new Error("API_BASE_URL must be set");
-}
+// Allow empty API_BASE during build (SSG) - will be set at runtime
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || "http://localhost:8080";
 
 export interface PurchaseRequest {
   sku: string;
