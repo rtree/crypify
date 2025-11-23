@@ -65,7 +65,9 @@ jobs:
             --concurrency 80 \
             --timeout 30s \
             --set-env-vars "NODE_ENV=production" \
-            --update-secrets "API_BASE_URL=API_BASE_URL:latest"
+            --update-secrets "NEXT_PUBLIC_API_BASE_URL=API_BASE_URL:latest" \
+            --update-secrets "NEXT_PUBLIC_API_URL=API_BASE_URL:latest" \
+            --update-secrets "NEXT_PUBLIC_CDP_PROJECT_ID=CDP_PROJECT_ID:latest"
       
       - name: Get Cloud Run URL
         id: get-url
