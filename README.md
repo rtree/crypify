@@ -1,228 +1,398 @@
-# Crypify - Crypto Payments Platform
+# Crypify - Decentralized Crypto Rewards Platform
 
-Monorepo structure for accepting crypto payments with automatic wallet creation and rewards.
+> **Seamless crypto payments with automatic wallet creation and gasless rewards**
 
-## 🚀 New Pivot Structure
+Crypify is a production-ready e-commerce platform that demonstrates the power of Coinbase Developer Platform (CDP) by combining **Embedded Wallets** for user payments with **Server Wallets** for gasless reward distribution.
 
-This project has been restructured into a monorepo with standalone web and API services.
+## 🌟 Project Significance
 
-### Structure
+### The Problem
+Traditional e-commerce platforms struggle with crypto adoption because:
+- Users need to manage complex wallets and private keys
+- High gas fees discourage small transactions  
+- Reward distribution requires manual processes
+- No seamless integration between fiat and crypto ecosystems
+
+### Our Solution
+Crypify eliminates these barriers by:
+- **Zero-friction onboarding**: Email OTP authentication creates wallets automatically (CDP Embedded Wallets)
+- **Gasless rewards**: Server-side distribution eliminates gas costs for users (CDP Server Wallets)
+- **Instant liquidity**: Users can spend rewards immediately without additional setup
+- **Email-based recovery**: No seed phrases to remember - wallet access tied to email
+
+## 🏗️ Architecture
+
+Monorepo structure with microservices deployment on Google Cloud Run:
 
 ```
 crypify/
-  web/        # Next.js frontend (UI only)
-  api/        # Node/Express backend (CDP, payments, rewards, email)
+  web/        # Next.js 14 frontend with CDP Embedded Wallets
+  api/        # Express backend with CDP Server Wallets
+  specs/      # Technical documentation
 ```
 
-## Features
+### System Flow
 
-- 🛍️ E-commerce shop with crypto payments
-- 💼 Automatic wallet creation for users
-- 💰 USDC payments on Base Sepolia testnet
-- 🎁 10% gasless rewards
-- 📧 Email notifications with wallet links
+```
+┌─────────────┐
+│   User      │
+│  (Browser)  │
+└──────┬──────┘
+       │
+       │ 1. Browse products
+       ▼
+┌─────────────────────┐
+│   Web Service       │
+│  (Next.js + CDP)    │
+│                     │
+│ • Product catalog   │
+│ • Email OTP auth    │
+│ • USDC payment UI   │
+│ • Embedded Wallets  │
+└──────┬──────────────┘
+       │
+       │ 2. Payment notification
+       ▼
+┌─────────────────────┐
+│   API Service       │
+│ (Express + CDP)     │
+│                     │
+│ • Payment tracking  │
+│ • Reward calculation│
+│ • Email with claim  │
+│ • Server Wallets    │
+└──────┬──────────────┘
+       │
+       │ 3. Gasless reward transfer
+       ▼
+┌─────────────────────┐
+│  Coinbase CDP       │
+│                     │
+│ • Wallet management │
+│ • USDC transfers    │
+│ • Base Sepolia      │
+└─────────────────────┘
+```
 
-## Prerequisites
+## 💡 Unique Implementation Details
 
+### Hybrid CDP Architecture
+
+We leverage **two distinct CDP wallet systems** working in harmony:
+
+#### 1. Embedded Wallets (User-Controlled)
+```typescript
+// Frontend: Email OTP authentication
+const { signInWithEmail } = useSignInWithEmail();
+await signInWithEmail(email);
+
+// CDP automatically manages wallet lifecycle
+// userId = email → persistent wallet address
+```
+
+**Why?**
+- Users own their private keys (non-custodial)
+- Zero setup friction (no MetaMask required)
+- Email-based recovery (familiar UX)
+- Perfect for **payment flows**
+
+#### 2. Server Wallets (Developer-Controlled)
+```typescript
+// Backend: Merchant wallet management
+const merchant = await Wallet.fetch(process.env.MERCHANT_WALLET_ID);
+
+// Gasless reward distribution
+await merchant.createTransfer({
+  amount: rewardAmount,
+  assetId: USDC_CONTRACT,
+  destination: userAddress,
+  gasless: true  // 🎯 User pays zero gas
+});
+```
+
+**Why?**
+- Automated backend operations
+- Gasless transfers (better UX)
+- Centralized fund management
+- Perfect for **reward distribution**
+
+### HMAC-Signed Claim Links
+
+No database required for claim validation:
+
+```typescript
+// Generate tamper-proof claim token
+const token = makeClaimToken({
+  email,
+  userAddress,
+  rewardUsd,
+  expiresAt: Date.now() + 24 * 3600 * 1000
+});
+
+// Email: https://crypify.app/claim?token=eyJ...
+```
+
+**Security features:**
+- HMAC-SHA256 signature prevents tampering
+- Time-based expiration (24 hours)
+- Stateless validation (no DB lookup)
+- Replay-resistant (one-time use tracked via frontend)
+
+### Build-Time Environment Variable Injection
+
+Next.js `NEXT_PUBLIC_*` variables require special handling in Docker:
+
+```dockerfile
+# Build stage - Accept build arguments
+ARG NEXT_PUBLIC_CDP_PROJECT_ID
+ARG NEXT_PUBLIC_API_BASE_URL
+
+# Inject into build environment
+ENV NEXT_PUBLIC_CDP_PROJECT_ID=$NEXT_PUBLIC_CDP_PROJECT_ID
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
+# Build with embedded variables
+RUN pnpm build
+```
+
+**Why this matters:**
+- Next.js bundles `NEXT_PUBLIC_*` at **build time**, not runtime
+- Runtime env vars don't work for client-side code
+- Our solution: GitHub Actions → Secret Manager → Docker build args
+
+## 🚀 Features
+
+- 🛍️ **E-commerce shop** with crypto payments (USDC on Base Sepolia)
+- 💼 **Automatic wallet creation** via Email OTP (no MetaMask needed)
+- 💰 **10% cashback rewards** distributed gaslessly
+- 📧 **Email notifications** with tamper-proof claim links
+- 🔐 **Zero-knowledge architecture** - no user data stored
+- ⚡ **Instant settlement** - blockchain-native transactions
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **Wallet SDK**: `@coinbase/cdp-hooks` (Embedded Wallets)
+- **Blockchain**: viem + wagmi (Base Sepolia)
+- **Deployment**: Google Cloud Run (containerized)
+
+### Backend
+- **Runtime**: Node.js 20 + Express
+- **Wallet SDK**: `@coinbase/coinbase-sdk` (Server Wallets)
+- **Email**: SendGrid (transactional emails)
+- **Deployment**: Google Cloud Run + Secret Manager
+
+### DevOps
+- **CI/CD**: GitHub Actions (automated deployment)
+- **Container Registry**: Google Artifact Registry
+- **Secrets**: Google Secret Manager
+- **Monitoring**: Cloud Run metrics
+
+## 📦 Local Development
+
+### Prerequisites
 - Node.js 20+
 - pnpm 9.0.0+
-- Coinbase Developer Platform (CDP) API credentials
-- SMTP credentials for email (Gmail recommended)
-- Google Cloud account (for Cloud Run deployment)
+- Coinbase Developer Platform account
+- SendGrid API key
+- Google Cloud account (for deployment)
 
-## Local Development
+### Setup
 
-### Install dependencies
-
+1. **Clone repository**
 ```bash
-# Install pnpm globally if needed
-npm install -g pnpm@9.0.0
+git clone https://github.com/rtree/crypify.git
+cd crypify
+```
 
-# Install all workspace dependencies
+2. **Install dependencies**
+```bash
 pnpm install
 ```
 
-### Setup API
-
+3. **Configure API**
 ```bash
 cd api
 cp .env.example .env
-# Edit .env with your credentials
-pnpm dev
+# Edit .env with your credentials:
+# - CDP_API_KEY, CDP_API_SECRET
+# - SENDGRID_API_KEY, FROM_EMAIL
+# - MERCHANT_WALLET_ADDRESS, CLAIM_SECRET
+pnpm dev  # Runs on http://localhost:8080
 ```
 
-### Setup Web
-
+4. **Configure Web**
 ```bash
 cd web
-pnpm dev
+cp .env.local.example .env.local
+# Edit .env.local:
+# - NEXT_PUBLIC_CDP_PROJECT_ID (from CDP Portal)
+# - NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+pnpm dev  # Runs on http://localhost:3000
 ```
 
-Visit http://localhost:3000
+5. **Visit** http://localhost:3000
 
-## Environment Variables
+## 🌐 Production Deployment
 
-### API (.env)
+Deployment is fully automated via GitHub Actions when pushing to `main` branch.
 
-```
-CDP_API_KEY=your_api_key_name
-CDP_API_SECRET=your_api_secret
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_password
-FROM_EMAIL=noreply@crypify.app
-FRONTEND_URL=http://localhost:3000
-```
+### Setup Steps
 
-### Web (.env.local)
+1. **Create Google Cloud Project**
+   - Enable Cloud Run, Artifact Registry, Secret Manager APIs
+   - Create service account with required permissions
 
-```
-API_BASE_URL=http://localhost:8080
-```
-
-## Deployment to Cloud Run
-
-Deployment is automated via GitHub Actions when you push to the `main` branch.
-
-### Prerequisites
-
-1. Create Google Cloud project and enable Cloud Run, Artifact Registry
-2. Create service account with necessary permissions
-3. Add GitHub secrets:
-   - `GCP_PROJECT_ID`: Your Google Cloud project ID
+2. **Configure GitHub Secrets**
+   - `GCP_PROJECT_ID`: Your GCP project ID
    - `GCP_SA_KEY`: Service account JSON key
-   
-4. Add Google Secret Manager secrets:
-   - `CDP_API_KEY`: Coinbase Developer Platform API key
-   - `CDP_API_SECRET`: Coinbase Developer Platform API secret
-   - `SMTP_HOST`: SMTP server host (e.g., smtp.gmail.com)
-   - `SMTP_PORT`: SMTP server port (e.g., 587)
-   - `SMTP_USER`: SMTP username
-   - `SMTP_PASS`: SMTP password
-   - `FROM_EMAIL`: From email address
-   - `FRONTEND_URL`: Frontend URL (set after web deployment)
-   - `API_BASE_URL`: API URL (set after api deployment)
 
-### Deploy API
-
+3. **Populate Secret Manager**
 ```bash
-git add .
-git commit -m "Deploy API"
+# CDP credentials
+echo -n "YOUR_API_KEY" | gcloud secrets create CDP_API_KEY --data-file=-
+echo -n "YOUR_API_SECRET" | gcloud secrets create CDP_API_SECRET --data-file=-
+echo -n "YOUR_PROJECT_ID" | gcloud secrets create CDP_PROJECT_ID --data-file=-
+
+# Email
+echo -n "YOUR_SENDGRID_KEY" | gcloud secrets create SENDGRID_API_KEY --data-file=-
+echo -n "noreply@crypify.app" | gcloud secrets create FROM_EMAIL --data-file=-
+
+# Application
+echo -n "YOUR_MERCHANT_ADDRESS" | gcloud secrets create MERCHANT_WALLET_ADDRESS --data-file=-
+echo -n "$(openssl rand -hex 32)" | gcloud secrets create CLAIM_SECRET --data-file=-
+```
+
+4. **Deploy**
+```bash
 git push origin main
 ```
 
-This triggers `.github/workflows/deploy-remix-webhook.yml` which:
-1. Builds Docker image for `api/`
-2. Pushes to Artifact Registry
-3. Deploys to Cloud Run (asia-northeast1)
+GitHub Actions will:
+- Build Docker images with embedded environment variables
+- Push to Artifact Registry
+- Deploy to Cloud Run (asia-northeast1)
+- Configure secrets and environment variables
 
-### Deploy Web
+### Production URLs
+- **Web**: https://crypify-web-kkz6k4jema-an.a.run.app
+- **API**: https://crypify-api-kkz6k4jema-an.a.run.app
 
-After API is deployed, update `API_BASE_URL` secret with the API Cloud Run URL, then:
+## 📖 User Flow
 
-```bash
-git add .
-git commit -m "Deploy Web"
-git push origin main
-```
+1. **Browse Products** → User visits `/shop` and selects a product
+2. **Email OTP Login** → CDP Embedded Wallet created automatically
+3. **Pay with USDC** → User approves transaction (Embedded Wallet signature)
+4. **Backend Processing** → API calculates 10% reward and sends email
+5. **Claim Reward** → User clicks email link → Gasless USDC transfer from Server Wallet
+6. **View Wallet** → User can check balance and transaction history
 
-This triggers `.github/workflows/deploy-next-wallet.yml` which:
-1. Builds Docker image for `web/`
-2. Pushes to Artifact Registry
-3. Deploys to Cloud Run (asia-northeast1)
+## 🔒 Security Considerations
 
-### Manual Deploy (alternative)
+### HMAC Claim Tokens
+- SHA-256 signature with 256-bit secret
+- Payload includes: `{email, userAddress, rewardUsd, expiresAt}`
+- 24-hour expiration window
+- Stateless validation (no database required)
 
-If you prefer manual deployment:
+### Gasless Transfer Limits
+- Source: Merchant Server Wallet (CDP-managed)
+- Network: Base Sepolia (testnet)
+- Asset: USDC only
+- Maximum: Wallet balance limit
 
-```bash
-# API
-cd api
-gcloud run deploy crypify-api \
-  --source . \
-  --region asia-northeast1 \
-  --allow-unauthenticated
+### Cloud Run Security
+- Secrets stored in Secret Manager (not environment variables)
+- Stateless containers (auto-scaling, no session persistence)
+- HTTPS-only (automatic TLS certificates)
+- IAM-based access control
 
-# Web
-cd web
-gcloud run deploy crypify-web \
-  --source . \
-  --region asia-northeast1 \
-  --allow-unauthenticated
-```
-
-## Flow
-
-1. User selects product and enters email → `/shop`
-2. Purchase record created → `/thanks`
-3. User clicks "Pay with Crypto"
-4. Backend:
-   - Creates wallet (CDP)
-   - Sends USDC payment
-   - Sends 10% gasless reward
-   - Emails wallet link
-5. User can view wallet and rewards → `/wallet`
-
-## Tech Stack
-
-- **Frontend**: Next.js 14, React, TypeScript
-- **Backend**: Node.js, Express, TypeScript
-- **Blockchain**: Coinbase Developer Platform (CDP), Base Sepolia
-- **Deployment**: Google Cloud Run, GitHub Actions
-- **Package Manager**: pnpm 9.0.0
-- **Email**: Nodemailer
-
-## Project Structure
+## 📊 Project Structure
 
 ```
 crypify/
 ├── .github/workflows/
-│   ├── deploy-web.yml      # Web deployment workflow
-│   └── deploy-api.yml      # API deployment workflow
-├── api/                     # Backend API
+│   ├── deploy-web.yml           # Web deployment pipeline
+│   └── deploy-api.yml           # API deployment pipeline
+├── api/
 │   ├── src/
-│   │   ├── routes/         # API routes (purchase, pay, wallet)
-│   │   ├── services/       # Business logic (CDP, email)
-│   │   ├── types.ts        # TypeScript types
-│   │   └── index.ts        # Express app
-│   ├── Dockerfile
-│   ├── package.json
-│   └── tsconfig.json
-├── web/                     # Frontend (Next.js)
+│   │   ├── routes/
+│   │   │   ├── claim.ts         # Reward claim endpoint
+│   │   │   ├── fundWallet.ts    # Gas funding endpoint
+│   │   │   ├── merchant.ts      # Merchant address endpoint
+│   │   │   ├── pay.ts           # Payment notification
+│   │   │   └── purchase.ts      # Purchase creation
+│   │   ├── services/
+│   │   │   └── email.ts         # SendGrid integration
+│   │   ├── lib/
+│   │   │   ├── cdp.ts           # CDP SDK initialization
+│   │   │   └── claimToken.ts    # HMAC token utilities
+│   │   ├── types.ts             # TypeScript definitions
+│   │   └── index.ts             # Express app
+│   ├── Dockerfile               # Multi-stage production build
+│   └── package.json
+├── web/
 │   ├── app/
-│   │   ├── shop/           # Product selection
-│   │   ├── thanks/         # Payment execution
-│   │   ├── wallet/         # Wallet view
-│   │   └── layout.tsx
-│   ├── lib/api.ts          # API client
-│   ├── Dockerfile
-│   ├── package.json
-│   └── next.config.js
-├── specs/                   # Documentation
-│   ├── purchase.md         # /purchase endpoint spec
-│   ├── pay.md              # /pay endpoint spec
-│   └── wallet.md           # /wallet endpoint spec
-├── pnpm-workspace.yaml     # pnpm workspace config
-├── package.json            # Root package.json
-├── DEPLOYMENT.md           # Deployment guide
+│   │   ├── shop/                # Product catalog
+│   │   │   └── page.tsx
+│   │   ├── thanks/              # Payment page
+│   │   │   ├── page.tsx
+│   │   │   └── PayWithCrypto.tsx  # Embedded Wallet UI
+│   │   ├── claim/               # Reward claim page
+│   │   │   ├── page.tsx
+│   │   │   └── ClaimWithAuth.tsx
+│   │   ├── wallet/              # Wallet dashboard
+│   │   │   └── page.tsx
+│   │   ├── CDPProvider.tsx      # CDP hooks provider
+│   │   ├── layout.tsx
+│   │   └── globals.css
+│   ├── lib/
+│   │   └── api.ts               # API client utilities
+│   ├── public/
+│   │   └── shop/                # Static shop assets
+│   ├── Dockerfile               # Next.js production build
+│   ├── next.config.js
+│   └── package.json
+├── specs/
+│   ├── MVP_FINALDESIGN.md       # Architecture documentation
+│   ├── DEPLOYMENT.md            # Deployment guide
+│   └── PROCEDURE.md             # Development procedures
+├── pnpm-workspace.yaml          # Monorepo configuration
 └── README.md
+```
 
-## TODO for Production
+## 🎯 Roadmap
 
-- [ ] Replace in-memory storage with database (PostgreSQL/Firebase)
-- [ ] Implement real CDP wallet creation and transfers
-- [ ] Add authentication for wallet access
-- [ ] Set up master wallet for USDC distribution
-- [ ] Add webhook for payment confirmations
-- [ ] Implement proper error handling and retries
-- [ ] Add rate limiting
-- [ ] Set up monitoring and logging
-- [ ] Add tests
+### Current (MVP)
+- ✅ Embedded Wallets with Email OTP
+- ✅ Server Wallets for gasless transfers
+- ✅ HMAC-signed claim links
+- ✅ Production deployment on Cloud Run
+- ✅ Automated CI/CD with GitHub Actions
 
-## Old Files
+### Future Enhancements
+- [ ] CDP OnRamp integration (fiat → crypto)
+- [ ] Multi-chain support (Ethereum, Polygon, Arbitrum)
+- [ ] Firestore for claim deduplication
+- [ ] Advanced analytics dashboard
+- [ ] Mobile app (React Native)
+- [ ] NFT rewards for loyal customers
 
-Previous Shopify Payment Extension implementation:
-- `frontend-payext/` - Shopify extension (before pivot)
-- `specs/` - Specification documents
+## 📄 License
 
+MIT License - see LICENSE file for details
+
+## 🤝 Contributing
+
+Contributions welcome! Please read our contributing guidelines and submit pull requests.
+
+## 📞 Support
+
+- **Documentation**: See `/specs` directory
+- **Issues**: GitHub Issues
+- **CDP Docs**: https://docs.cdp.coinbase.com
+
+---
+
+Built with ❤️ using [Coinbase Developer Platform](https://www.coinbase.com/developer-platform)
